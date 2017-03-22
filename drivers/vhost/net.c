@@ -29,7 +29,11 @@
 #include <net/sock.h>
 
 #include "vhost.h"
-
+//kwlee
+#ifdef ANCS
+LIST_HEAD(ancs_proc_list);			/*AHN*/
+EXPORT_SYMBOL(ancs_proc_list);	/*AHN*/
+#endif
 static int experimental_zcopytx = 1;
 module_param(experimental_zcopytx, int, 0444);
 MODULE_PARM_DESC(experimental_zcopytx, "Enable Zero Copy TX;"
@@ -109,6 +113,9 @@ struct vhost_net {
 	unsigned tx_zcopy_err;
 	/* Flush in progress. Protected by tx vq lock. */
 	bool tx_flush;
+#ifdef ANCS
+	struct ancs_vm *vnet;
+#endif
 };
 
 static unsigned vhost_net_zcopy_mask __read_mostly;
@@ -295,6 +302,10 @@ static void handle_tx(struct vhost_net *net)
 	struct vhost_virtqueue *vq = &nvq->vq;
 	unsigned out, in;
 	int head;
+#ifdef ANCS
+	struct ancs_vm *vnet;
+	struct list_head *ancs_head;
+#endif	
 	struct msghdr msg = {
 		.msg_name = NULL,
 		.msg_namelen = 0,
@@ -353,6 +364,18 @@ static void handle_tx(struct vhost_net *net)
 		}
 		/* Skip header. TODO: support TSO. */
 		len = iov_length(vq->iov, out);
+#ifdef ANCS
+		vnet=net->vnet;
+		ancs_head=&vnet->active_list;
+		if(ancs_head!=ancs_head->prev){ 
+			if(len > vnet->remaining_credit){
+				vnet->need_reschedule=true;
+				vhost_discard_vq_desc(vq, 1);
+				continue;
+			}
+			vnet->remaining_credit-=len;
+			}
+#endif
 		iov_iter_init(&msg.msg_iter, WRITE, vq->iov, out, len);
 		iov_iter_advance(&msg.msg_iter, hdr_size);
 		/* Sanity check */
@@ -678,7 +701,9 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	struct vhost_dev *dev;
 	struct vhost_virtqueue **vqs;
 	int i;
-
+#ifdef ANCS
+	struct ancs_vm *vnet;
+#endif
 	n = kmalloc(sizeof *n, GFP_KERNEL | __GFP_NOWARN | __GFP_REPEAT);
 	if (!n) {
 		n = vmalloc(sizeof *n);
@@ -711,6 +736,18 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 
 	f->private_data = n;
 
+#ifdef ANCS	//kwlee
+	vnet = kmalloc(sizeof (struct ancs_vm), GFP_KERNEL | __GFP_NOWARN | __GFP_REPEAT);
+	if(!vnet)
+		return -ENOMEM;
+	
+	INIT_LIST_HEAD(&vnet->proc_list);				/* AHN */
+	list_add(&vnet->proc_list, &ancs_proc_list);		/* AHN */
+	n->vnet=vnet;
+	INIT_LIST_HEAD(&vnet->active_list);
+	
+//	vnet->poll=n->poll;
+#endif
 	return 0;
 }
 

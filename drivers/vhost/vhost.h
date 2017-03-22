@@ -1,6 +1,7 @@
 #ifndef _VHOST_H
 #define _VHOST_H
-
+//kwlee
+#define ANCS
 #include <linux/eventfd.h>
 #include <linux/vhost.h>
 #include <linux/mm.h>
@@ -35,6 +36,19 @@ struct vhost_poll {
 	struct vhost_dev	 *dev;
 };
 
+#ifdef ANCS	//kwlee
+struct ancs_vm{
+	struct list_head active_list;
+	unsigned int weight;
+	bool need_reschedule;
+	unsigned int remaining_credit;
+	unsigned int min_credit;
+	unsigned int max_credit;
+	int id;
+	struct list_head proc_list;	/*AHN*/
+	struct vhost_poll *poll;
+};
+#endif
 void vhost_work_init(struct vhost_work *work, vhost_work_fn_t fn);
 void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work);
 
