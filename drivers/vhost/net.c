@@ -33,6 +33,7 @@
 #ifdef ANCS
 LIST_HEAD(ancs_proc_list);			/*AHN*/
 EXPORT_SYMBOL(ancs_proc_list);	/*AHN*/
+int count = 1;
 #endif
 static int experimental_zcopytx = 1;
 module_param(experimental_zcopytx, int, 0444);
@@ -303,7 +304,7 @@ static void handle_tx(struct vhost_net *net)
 	unsigned out, in;
 	int head;
 #ifdef ANCS
-	struct ancs_vm *vnet;
+	struct ancs_vm *vnet = net->vnet;
 	struct list_head *ancs_head;
 #endif	
 	struct msghdr msg = {
@@ -365,16 +366,20 @@ static void handle_tx(struct vhost_net *net)
 		/* Skip header. TODO: support TSO. */
 		len = iov_length(vq->iov, out);
 #ifdef ANCS
-		vnet=net->vnet;
-		ancs_head=&vnet->active_list;
-		if(ancs_head!=ancs_head->prev){ 
+//		ancs_head=&vnet->active_list;
+//		if(ancs_head!=ancs_head->prev){ 
 			if(len > vnet->remaining_credit){
+				printk("kwlee: len = %d, remaining credit = %d\n", len, vnet->remaining_credit);
 				vnet->need_reschedule=true;
 				vhost_discard_vq_desc(vq, 1);
-				continue;
-			}
+				if (unlikely(vhost_enable_notify(&net->dev, vq))){ 
+					vhost_disable_notify(&net->dev, vq);
+					continue;
+					}
+				break;
+				}
 			vnet->remaining_credit-=len;
-			}
+//			}
 #endif
 		iov_iter_init(&msg.msg_iter, WRITE, vq->iov, out, len);
 		iov_iter_advance(&msg.msg_iter, hdr_size);
@@ -745,7 +750,12 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	list_add(&vnet->proc_list, &ancs_proc_list);		/* AHN */
 	n->vnet=vnet;
 	INIT_LIST_HEAD(&vnet->active_list);
-	
+	vnet->id = count++;
+	vnet->remaining_credit = 10000000;
+	vnet->weight = vnet->id;
+	vnet->max_credit = 0;
+	vnet->min_credit = 0;
+	vnet->need_reschedule = false;
 //	vnet->poll=n->poll;
 #endif
 	return 0;
