@@ -47,6 +47,7 @@ struct ancs_vm{
 	int id;
 	struct list_head proc_list;	/*AHN*/
 	struct vhost_poll *poll;
+	struct task_struct *vm;
 };
 #endif
 void vhost_work_init(struct vhost_work *work, vhost_work_fn_t fn);

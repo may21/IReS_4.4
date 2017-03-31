@@ -8399,7 +8399,7 @@ int tg_set_cfs_quota(struct task_group *tg, long cfs_quota_us)
 
 	return tg_set_cfs_bandwidth(tg, period, quota);
 }
-
+EXPORT_SYMBOL_GPL(tg_set_cfs_quota);	//kwlee
 long tg_get_cfs_quota(struct task_group *tg)
 {
 	u64 quota_us;
@@ -8412,7 +8412,7 @@ long tg_get_cfs_quota(struct task_group *tg)
 
 	return quota_us;
 }
-
+EXPORT_SYMBOL_GPL(tg_get_cfs_quota);	//kwlee
 int tg_set_cfs_period(struct task_group *tg, long cfs_period_us)
 {
 	u64 quota, period;
