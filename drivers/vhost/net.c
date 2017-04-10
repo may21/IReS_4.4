@@ -366,8 +366,8 @@ static void handle_tx(struct vhost_net *net)
 		/* Skip header. TODO: support TSO. */
 		len = iov_length(vq->iov, out);
 #ifdef ANCS
-//		ancs_head=&vnet->active_list;
-//		if(ancs_head!=ancs_head->prev){ 
+		ancs_head=&vnet->active_list;
+		if(ancs_head!=ancs_head->prev){ 
 			if(len > vnet->remaining_credit){
 				//printk("kwlee: len = %d, remaining credit = %d\n", len, vnet->remaining_credit);
 				vnet->need_reschedule=true;
@@ -379,7 +379,7 @@ static void handle_tx(struct vhost_net *net)
 				break;
 				}
 			vnet->remaining_credit-=len;
-//			}
+			}
 #endif
 		iov_iter_init(&msg.msg_iter, WRITE, vq->iov, out, len);
 		iov_iter_advance(&msg.msg_iter, hdr_size);
@@ -753,10 +753,11 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	vnet->id = count++;
 	vnet->remaining_credit = 0;
 	vnet->weight = vnet->id;
-	vnet->max_credit = 0;
 	vnet->min_credit = 0;
+	vnet->max_credit = 0;
+	
 	vnet->need_reschedule = false;
-//	vnet->poll=n->poll;
+	vnet->poll=n->poll;
 #endif
 	return 0;
 }
@@ -1091,7 +1092,7 @@ static long vhost_net_set_owner(struct vhost_net *n)
 		vhost_net_clear_ubuf_info(n);
 	vhost_net_flush(n);
 #ifdef ANCS
-	n->vnet->vm=current;
+	n->vnet->vhost=current;
 
 #endif
 out:
