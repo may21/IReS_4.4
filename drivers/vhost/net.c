@@ -754,8 +754,8 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	vnet->id = count++;
 	vnet->remaining_credit = 0;
 	vnet->weight = vnet->id;
-	vnet->min_credit = 0;
 	vnet->max_credit = 0;
+	vnet->min_credit = 0;
 	vnet->used_credit = 0;
 	vnet->need_reschedule = false;
 	vnet->poll=n->poll;
