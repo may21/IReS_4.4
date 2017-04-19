@@ -44,6 +44,7 @@ struct ancs_vm{
 	unsigned int remaining_credit;
 	unsigned int min_credit;
 	unsigned int max_credit;
+	unsigned int used_credit;
 	int id;
 	struct list_head proc_list;	/*AHN*/
 	struct vhost_poll *poll;
