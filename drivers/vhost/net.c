@@ -759,6 +759,11 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	vnet->used_credit = 0;
 	vnet->need_reschedule = false;
 	vnet->poll=n->poll;
+#ifdef CPU_CONTROL
+	vnet->stat.cpu_usage = 0;
+	vnet->stat.nw_usage = 0;
+	vnet->stat.virq = 0;
+#endif	
 #endif
 	return 0;
 }

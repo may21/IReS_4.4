@@ -37,6 +37,12 @@ struct vhost_poll {
 };
 
 #ifdef ANCS	//kwlee
+#define MAX_NUMBER_VCPU	4
+struct ancs_stat{
+	unsigned int cpu_usage;
+	unsigned int nw_usage;
+	unsigned int virq;
+};
 struct ancs_vm{
 	struct list_head active_list;
 	unsigned int weight;
@@ -52,6 +58,7 @@ struct ancs_vm{
 
 #ifdef CPU_CONTROL	
 	struct task_struct *vcpu[MAX_NUMBER_VCPU];
+	struct ancs_stat stat;
 #endif
 };
 #endif
