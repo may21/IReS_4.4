@@ -16,26 +16,31 @@
 #define ANCS
 #endif
 
-#ifdef CPU_CONTROL
-#undef CPU_CONTROL
-#endif
+//#ifndef CPU_CONTROL
+#define CPU_CONTROL
+//#endif
 
 #define MAX_CREDIT 8000000	//kwlee
 #define MIN_CREDIT 100000
 #define MAX_NUMBER_VCPU	4
 #define VCPU_IDX	7
 
+#define NW_intensive 0
+#define CPU_intensive 1
+
 struct ancs_vm;
+
+#define MAX(a,b) \  
+({ __typeof__ (a) _a = (a); \  
+__typeof__ (b) _b = (b); \  
+_a > _b ? _a : _b; })
 
 struct credit_allocator{
 	struct list_head active_vif_list;
 	spinlock_t active_vif_list_lock;
-	
-	struct list_head ff_list;
-	spinlock_t ff_list_lock;
 
 	struct timer_list account_timer;
-	struct timer_list ff_timer;
+	struct timer_list monitor_timer;
 
 	unsigned int total_weight;
 	unsigned int credit_balance;

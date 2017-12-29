@@ -26,6 +26,12 @@ int fileread = 0;
 struct credit_allocator *credit_allocator;
 
 #ifdef CPU_CONTROL
+static struct work_struct ires_work;
+void ires_work_func(void * data)
+{
+	printk("[WORK QUEUE] Enter workqueue function\n");  
+}
+static DECLARE_WORK(ires_work, ires_work_func);
 int get_quota(struct ancs_vm *vif)
 {
 	struct task_struct *vhost=vif->vhost;
@@ -122,7 +128,42 @@ void remove_active_vif(struct ancs_vm *vif)
 		list_del_init(&vif->active_list);
 	spin_unlock_irq(&credit_allocator->active_vif_list_lock);
 }
+#ifdef CPU_CONTROL
+static void ancs_monitoring(unsigned int data){
+	struct list_head *next;
+	struct ancs_vm *temp_vif, *next_vif;
+	unsigned long cpu, nw, result;
+	cpu = 0; 
+	nw = 0;
+	result = 0;
+	if(list_empty(&credit_allocator->active_vif_list))
+		goto out;
 
+	list_for_each_entry_safe(temp_vif, next_vif, &credit_allocator->active_vif_list, active_list){
+		if(!temp_vif)
+			goto out;
+		
+		cpu = temp_vif->stat.cpu_usage; 
+		nw = temp_vif->used_credit;
+		
+		if(temp_vif->stat.cpu_usage != 0)
+			cpu = cpu /(MAX_NUMBER_VCPU*100);
+		if(temp_vif->used_credit != 0)
+			nw = nw / MAX_CREDIT;
+
+		if(cpu > nw)
+			temp_vif->stat.flag = CPU_intensive;
+		else
+			temp_vif->stat.flag = NW_intensive;
+
+		temp_vif->used_credit = 0;		
+		}
+
+	out:
+	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
+	return;
+}
+#endif
 static void credit_accounting(unsigned long data){
 	struct list_head *iter, *next;
 	struct ancs_vm *temp_vif, *next_vif; 
@@ -156,6 +197,12 @@ static void credit_accounting(unsigned long data){
 		credit_fair = ((credit_total * temp_vif->weight) + (total-1) )/ total;
 //		temp_vif->remaining_credit += credit_fair;
 		temp_vif->remaining_credit = credit_fair;
+#ifdef CPU_CONTROL
+		credit_used=temp_vif->used_credit;
+			/* check required performance is satisfied */
+		if(credit_used!=0 && credit_used < credit_fair)	
+			schedule_work(&ires_work);
+#endif
 		if(temp_vif->min_credit!=0 || temp_vif->max_credit!=0){
 			if(temp_vif->min_credit!=0 && temp_vif->remaining_credit < temp_vif->min_credit){
 				credit_total-= (temp_vif->min_credit - temp_vif->remaining_credit);
@@ -234,17 +281,32 @@ static ssize_t vif_write(struct file *file, const char __user* user_buffer, size
 	if(!strcmp(filename, "min_credit"))
         {
 		vif->min_credit = value;
+		goto out;
         }
 	
 	if(!strcmp(filename, "max_credit"))
         {
 		vif->max_credit = value;
+		goto out;
         }
 
 	if(!strcmp(filename, "weight"))
         {
 		vif->weight = value;
+		goto out;
         }
+#ifdef CPU_CONTROL	
+	if(!strcmp(filename, "CPU_usage"))
+        {
+		vif->stat.cpu_usage= value;
+		goto out;
+        }
+	if(!strcmp(filename, "kvm_virq"))
+        {
+		vif->stat.virq= value;
+		goto out;
+        }
+#endif	
 	return count;
 	
 }
@@ -260,87 +322,47 @@ static ssize_t vif_read(struct file *file, char *buf, size_t count, loff_t *ppos
                 printk(KERN_INFO "NULL Data\n");
                 return 0;
         }
-
-	if(!strcmp(filename, "min_credit"))
-        {
+	if(!strcmp(filename, "min_credit")){
 		len = sprintf(buf, "%d\n", vif->min_credit);
-		if(fileread == 0)
-		{
-			fileread = 1;
-			return len;
+		goto out;
 		}
-		else
-		{
-			fileread = 0;
-			return 0;
-		}
-	}
-
-        if(!strcmp(filename, "max_credit"))
-        {
+	else if(!strcmp(filename, "max_credit")){
 		len = sprintf(buf, "%d\n", vif->max_credit);
-                if(fileread == 0)
-                {
-                        fileread = 1;
-                        return len;
-                }
-                else
-                {
-                        fileread = 0;
-                        return 0;
-                }
-        }	
-
-	 if(!strcmp(filename, "weight"))
-        {
+		goto out;
+		}
+	else if(!strcmp(filename, "weight")){
 		len = sprintf(buf, "%d\n", vif->weight);
-                if(fileread == 0)
-                {
-                        fileread = 1;
-                        return len;
-                }
-                else
-                {
-                        fileread = 0;
-                        return 0;
-                }
-        }
-	 
-	  if(!strcmp(filename, "remaining_credit"))
-        {
+		goto out;
+		}
+	else if(!strcmp(filename, "remaining_credit")){
 		len = sprintf(buf, "%d\n", vif->remaining_credit);
-                if(fileread == 0)
-                {
-                        fileread = 1;
-                        return len;
-                }
-                else
-                {
-                        fileread = 0;
-                        return 0;
-                }
-        }	
-
-	   if(!strcmp(filename, "used_credit"))
-        {
-		len = sprintf(buf, "%d\n", vif->used_credit);
-                if(fileread == 0)
-                {
-                        fileread = 1;
-                        return len;
-                }
-                else
-                {
-                        fileread = 0;
-                        return 0;
-                }
-        }
-
-	  if(!strcmp(filename, "pid"))
-        {
+		goto out;
+		}
+	else if(!strcmp(filename, "used_credit")){
+       	len = sprintf(buf, "%d\n", vif->used_credit);
+		goto out;
+		}
+	else if(!strcmp(filename, "pid")){
 		len = sprintf(buf, "%d\n", vif->vhost->pid);
-                if(fileread == 0)
-                {
+		goto out;
+		}
+#ifdef CPU_CONTROL	
+	else if(!strcmp(filename, "CPU_usage")){
+       	len = sprintf(buf, "%d\n", vif->stat.cpu_usage);
+		goto out;
+		}
+	else if(!strcmp(filename, "kvm_virq")){
+		len = sprintf(buf, "%d\n", vif->stat.virq);
+		goto out;
+		}
+#endif	
+	else{
+		count = sprintf(buf, "%s", "ERROR");
+		return count;
+		}
+
+out:
+	if(fileread == 0){
                         fileread = 1;
                         return len;
                 }
@@ -349,10 +371,6 @@ static ssize_t vif_read(struct file *file, char *buf, size_t count, loff_t *ppos
                         fileread = 0;
                         return 0;
                 }
-        }
-	
-	count = sprintf(buf, "%s", "ERROR\n");
-	return count;
 }
 
 static const struct file_operations vif_opt ={
@@ -398,10 +416,21 @@ static int __init vif_init(void)
 		("used_credit",0600, proc_vif[idx].dir, &vif_opt, vif);
 		proc_vif[idx].file[5] = proc_create_data
 		("pid",0600, proc_vif[idx].dir, &vif_opt, vif);
-                idx++;
+#ifdef CPU_CONTROL		
+		proc_vif[idx].file[6] = proc_create_data
+		("CPU_usage",0600, proc_vif[idx].dir, &vif_opt, vif);
+		proc_vif[idx].file[7] = proc_create_data
+		("vhost_usage",0600, proc_vif[idx].dir, &vif_opt, vif);
+		proc_vif[idx].file[8] = proc_create_data
+		("kvm_virq",0600, proc_vif[idx].dir, &vif_opt, vif);
+#endif	
+		idx++;
         }
-		
+	cpu	= smp_processor_id();
+	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
 	setup_timer(&credit_allocator->account_timer, credit_accounting, cpu );
+
+	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
 	mod_timer(&credit_allocator->account_timer, jiffies + msecs_to_jiffies(50));
 	printk(KERN_INFO "kwlee: credit allocator init!!\n");	
 
@@ -422,15 +451,22 @@ static void __exit vif_exit(void)
 		remove_proc_entry("remaining_credit", proc_vif[i].dir);
 		remove_proc_entry("used_credit", proc_vif[i].dir);
 		remove_proc_entry("pid", proc_vif[i].dir);
+#ifdef CPU_CONTROL	
+		remove_proc_entry("CPU_usage", proc_vif[i].dir);
+		remove_proc_entry("vhost_usage", proc_vif[i].dir);
+		remove_proc_entry("kvm_virq", proc_vif[i].dir);
+#endif	
 		remove_proc_entry(proc_vif[i].name, proc_root_dir);
         }
-	remove_proc_entry("oslab", NULL);
+	
 	list_for_each(p, &ancs_proc_list){
 		vif = list_entry(p, struct ancs_vm, proc_list);
 		remove_active_vif(vif);
 		}
-
+	del_timer(&credit_allocator->monitor_timer);
 	del_timer(&credit_allocator->account_timer);
+
+	remove_proc_entry("oslab", NULL);
         return;
 }
 
