@@ -42,6 +42,7 @@ struct ancs_stat{
 	unsigned int cpu_usage;
 	unsigned int nw_usage;
 	unsigned int virq;
+	int flag;
 };
 struct ancs_vm{
 	struct list_head active_list;
