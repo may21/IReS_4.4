@@ -6,7 +6,7 @@
 #include <linux/string.h>
 #include<linux/kvm_host.h>
 #include<linux/sched.h>
-#include<../../linux-4.4.41/kernel/sched/sched.h>
+#include<../kernel/sched/sched.h>
 #include "common.h"
 struct proc_dir_vif{
 	char name[10];
@@ -430,7 +430,7 @@ static int __init vif_init(void)
 	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
 //	setup_timer(&credit_allocator->account_timer, credit_accounting, cpu );
 
-	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
+//	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
 //	mod_timer(&credit_allocator->account_timer, jiffies + msecs_to_jiffies(50));
 	printk(KERN_INFO "kwlee: credit allocator init!!\n");	
 

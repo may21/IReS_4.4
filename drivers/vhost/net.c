@@ -368,8 +368,8 @@ static void handle_tx(struct vhost_net *net)
 #ifdef ANCS
 		ancs_head=&vnet->active_list;
 		if(ancs_head!=ancs_head->prev){ 
-			if(len > vnet->remaining_credit){
-				//printk("kwlee: len = %d, remaining credit = %d\n", len, vnet->remaining_credit);
+/*			if(len > vnet->remaining_credit){
+				printk("kwlee: len = %d, remaining credit = %d\n", len, vnet->remaining_credit);
 				vnet->need_reschedule=true;
 				vhost_discard_vq_desc(vq, 1);
 				if (unlikely(vhost_enable_notify(&net->dev, vq))){ 
@@ -378,7 +378,7 @@ static void handle_tx(struct vhost_net *net)
 					}
 				break;
 				}
-			vnet->remaining_credit-=len;
+			vnet->remaining_credit-=len;*/
 			vnet->used_credit+=len;
 			}
 #endif
@@ -753,7 +753,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	INIT_LIST_HEAD(&vnet->active_list);
 	vnet->id = count++;
 	vnet->remaining_credit = 0;
-	vnet->weight = vnet->id;
+	vnet->weight = 1;
 	vnet->max_credit = 0;
 	vnet->min_credit = 0;
 	vnet->used_credit = 0;
