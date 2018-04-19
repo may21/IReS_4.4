@@ -69,7 +69,7 @@ static void quota_control(unsigned long data){
 		temp_vif->used_credit = 0;
 		}
 	out:
-	//mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
+	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
 	return;
 
 }
