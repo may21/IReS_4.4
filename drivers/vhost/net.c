@@ -1098,9 +1098,9 @@ static long vhost_net_set_owner(struct vhost_net *n)
 	if (r)
 		vhost_net_clear_ubuf_info(n);
 	vhost_net_flush(n);
-#ifdef ANCS
-	n->vnet->vhost=current;
 
+#ifdef ANCS
+	n->vnet->vhost=n->dev->worker;
 #endif
 out:
 	mutex_unlock(&n->dev.mutex);
