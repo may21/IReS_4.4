@@ -32,6 +32,35 @@ void ires_work_func(void * data)
 	printk("[WORK QUEUE] Enter workqueue function\n");  
 }
 static DECLARE_WORK(ires_work, ires_work_func);
+static void quota_control(unsigned long data){
+	struct list_head *next;
+	struct ancs_vm *temp_vif, *next_vif;
+	unsigned long goal, perf;
+	int before, after, diff;
+	int cpu = smp_processor_id();
+	WARN_ON(cpu != data);	
+
+	if(list_empty(&credit_allocator->active_vif_list))
+		goto out;
+
+	diff=1;
+
+	list_for_each_entry_safe(temp_vif, next_vif, &credit_allocator->active_vif_list, active_list){
+		if(!temp_vif)
+			goto out;
+
+		goal = temp_vif->max_credit;
+		perf = temp_vif->used_credit;
+		before = get_quota(temp_vif);
+
+		after = before + 10000*diff;
+		set_vhost_quota(temp_vif, after);
+		}
+	out:
+	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
+	return;
+
+}
 int get_quota(struct ancs_vm *vif)
 {
 	struct task_struct *vhost=vif->vhost;
@@ -427,8 +456,9 @@ static int __init vif_init(void)
 		idx++;
         }
 	cpu	= smp_processor_id();
-	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
-//	setup_timer(&credit_allocator->account_timer, credit_accounting, cpu );
+//	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
+//	setup_timer(&credit_allocator->account_timer, credit_accounting, cpu);
+	setup_timer(&credit_allocator->quota_timer, quota_control, cpu);
 
 //	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
 //	mod_timer(&credit_allocator->account_timer, jiffies + msecs_to_jiffies(50));
