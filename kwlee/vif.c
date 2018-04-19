@@ -35,7 +35,7 @@ static DECLARE_WORK(ires_work, ires_work_func);
 static void quota_control(unsigned long data){
 	struct list_head *next;
 	struct ancs_vm *temp_vif, *next_vif;
-	unsigned long goal, perf;
+	unsigned long goal, perf, prev_diff;
 	int before, after, diff;
 	int cpu = smp_processor_id();
 	WARN_ON(cpu != data);	
@@ -51,10 +51,22 @@ static void quota_control(unsigned long data){
 
 		goal = temp_vif->max_credit;
 		perf = temp_vif->used_credit;
-		before = get_quota(temp_vif);
 
+		if(goal <= perf)
+			goto skip;
+
+		prev_diff = temp_vif->used_credit - temp_vif->remaining_credit;
+		if(prev_diff <= 0)
+			prev_diff = 0;
+		
+		before = get_quota(temp_vif);
+		diff = (goal-perf)/prev_diff;
 		after = before + 10000*diff;
 		set_vhost_quota(temp_vif, after);
+
+	skip:
+		temp_vif->remaining_credit = temp_vif->used_credit;
+		temp_vif->used_credit = 0;
 		}
 	out:
 	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
@@ -185,7 +197,7 @@ static void ancs_monitoring(unsigned int data){
 		else
 			temp_vif->stat.flag = NW_intensive;
 
-		temp_vif->used_credit = 0;		
+		temp_vif->used_credit = 0;
 		}
 
 	out:
