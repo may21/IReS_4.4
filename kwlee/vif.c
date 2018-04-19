@@ -56,12 +56,14 @@ static void quota_control(unsigned long data){
 			goto skip;
 
 		prev_diff = temp_vif->used_credit - temp_vif->remaining_credit;
-		if(prev_diff <= 0)
+		if(prev_diff == 0)
 			prev_diff = 1;
 		
 		before = get_quota(temp_vif);
 		diff = (goal-perf)/prev_diff;
 		after = before + 10000*diff;
+		if(after > MAX_QUOTA)
+			after = MAX_QUOTA;
 		set_vhost_quota(temp_vif, after);
 
 	skip:
