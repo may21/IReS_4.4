@@ -57,7 +57,7 @@ static void quota_control(unsigned long data){
 
 		prev_diff = temp_vif->used_credit - temp_vif->remaining_credit;
 		if(prev_diff <= 0)
-			prev_diff = 0;
+			prev_diff = 1;
 		
 		before = get_quota(temp_vif);
 		diff = (goal-perf)/prev_diff;
@@ -69,7 +69,7 @@ static void quota_control(unsigned long data){
 		temp_vif->used_credit = 0;
 		}
 	out:
-	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
+	//mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
 	return;
 
 }
@@ -80,7 +80,8 @@ int get_quota(struct ancs_vm *vif)
 	int quota;
 	
 	quota=tg_get_cfs_quota(vhost->sched_task_group);
-
+	
+	printk("kwlee: quota of vhost is %d\n", quota);
 	return quota;
 }
 void set_vcpu_quota(struct ancs_vm *vif, int quota)
@@ -104,6 +105,8 @@ void set_vhost_quota(struct ancs_vm *vif, int quota)
 	err=tg_set_cfs_quota(tg, quota);
 	if(err)
 		printk("kwlee: vhost quota setting is failed\n");
+	
+	printk("kwlee: SETTING quota of vhost is %d\n", quota);
 }
 #endif
 void add_active_vif(struct ancs_vm *vif)
@@ -475,6 +478,7 @@ static int __init vif_init(void)
 
 //	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
 //	mod_timer(&credit_allocator->account_timer, jiffies + msecs_to_jiffies(50));
+	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
 	printk(KERN_INFO "kwlee: credit allocator init!!\n");	
 
         return 0;
