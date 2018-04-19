@@ -171,7 +171,7 @@ static void credit_accounting(unsigned long data){
 	unsigned int weight_left = total;
 	unsigned int credit_left = 0;
 	unsigned int credit_total = MAX_CREDIT ;
-	unsigned int credit_fair;
+	unsigned int credit_fair, credit_used;
 	int credit_xtra = 0 ;
 	iter=next=NULL;
 	temp_vif=next_vif=NULL;
@@ -192,8 +192,7 @@ static void credit_accounting(unsigned long data){
 		if(!temp_vif)
 			goto out;
 		
-		weight_left -= temp_vif->weight;
-	
+		weight_left -= temp_vif->weight;	
 		credit_fair = ((credit_total * temp_vif->weight) + (total-1) )/ total;
 //		temp_vif->remaining_credit += credit_fair;
 		temp_vif->remaining_credit = credit_fair;
@@ -306,7 +305,8 @@ static ssize_t vif_write(struct file *file, const char __user* user_buffer, size
 		vif->stat.virq= value;
 		goto out;
         }
-#endif	
+#endif
+out:
 	return count;
 	
 }
