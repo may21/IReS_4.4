@@ -493,8 +493,9 @@ static void __exit vif_exit(void)
 		vif = list_entry(p, struct ancs_vm, proc_list);
 		remove_active_vif(vif);
 		}
-	del_timer(&credit_allocator->monitor_timer);
-	del_timer(&credit_allocator->account_timer);
+//	del_timer(&credit_allocator->monitor_timer);
+//	del_timer(&credit_allocator->account_timer);
+	del_timer(&credit_allocator->quota_timer);
 
 	remove_proc_entry("oslab", NULL);
         return;
