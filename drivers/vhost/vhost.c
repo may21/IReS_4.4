@@ -461,7 +461,6 @@ long vhost_dev_set_owner(struct vhost_dev *dev)
 		err = PTR_ERR(worker);
 		goto err_worker;
 	}
-
 	dev->worker = worker;
 	wake_up_process(worker);	/* avoid contributing to loadavg */
 
