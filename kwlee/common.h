@@ -16,9 +16,9 @@
 #define ANCS
 #endif
 
-//#ifndef CPU_CONTROL
-//#define CPU_CONTROL
-//#endif
+#ifndef CPU_CONTROL
+#define CPU_CONTROL
+#endif
 
 #define MAX_CREDIT 8000000	//kwlee
 #define MIN_CREDIT 100000

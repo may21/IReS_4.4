@@ -2,7 +2,7 @@
 #define _VHOST_H
 //kwlee
 #define ANCS
-//#define CPU_CONTROL
+#define CPU_CONTROL
 #include <linux/eventfd.h>
 #include <linux/vhost.h>
 #include <linux/mm.h>

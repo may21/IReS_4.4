@@ -481,15 +481,17 @@ static int __init vif_init(void)
 		idx++;
         }
 	cpu	= smp_processor_id();
-//	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
+
 //	setup_timer(&credit_allocator->account_timer, credit_accounting, cpu);
-	setup_timer(&credit_allocator->quota_timer, quota_control, cpu);
-
-//	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
 //	mod_timer(&credit_allocator->account_timer, jiffies + msecs_to_jiffies(50));
-	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
-	printk(KERN_INFO "kwlee: credit allocator init!!\n");	
 
+#ifdef CPU_CONTROL
+	//	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
+	//	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
+	setup_timer(&credit_allocator->quota_timer, quota_control, cpu);
+	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
+#endif
+	printk(KERN_INFO "kwlee: credit allocator init!!\n");	
         return 0;
 }
 
