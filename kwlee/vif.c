@@ -52,18 +52,22 @@ static void quota_control(unsigned long data){
 		goal = temp_vif->max_credit;
 		perf = temp_vif->used_credit;
 
-		if(goal <= perf)
+		if(goal == perf)
 			goto skip;
 
 		prev_diff = temp_vif->used_credit - temp_vif->remaining_credit;
-		if(prev_diff == 0)
-			prev_diff = 1;
 		
+		if(prev_diff == 0)
+			diff = 1;
+		else
+			diff = (goal-perf)/prev_diff;
+
 		before = get_quota(temp_vif);
-		diff = (goal-perf)/prev_diff;
+		
 		if(diff>5)
 			diff = 5;
-		after = before + 10000*diff;
+		
+		after = before + 1000*diff;
 		
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
@@ -90,7 +94,7 @@ int get_quota(struct ancs_vm *vif)
 	
 	quota=tg_get_cfs_quota(vhost->sched_task_group);
 	
-	printk("kwlee: quota of vhost is %d\n", quota);
+	//printk("kwlee: quota of vhost is %d\n", quota);
 	return quota;
 }
 void set_vcpu_quota(struct ancs_vm *vif, int quota)
@@ -115,7 +119,7 @@ void set_vhost_quota(struct ancs_vm *vif, int quota)
 	if(err)
 		printk("kwlee: vhost quota setting is failed\n");
 	
-	printk("kwlee: SETTING quota of vhost is %d\n", quota);
+	//printk("kwlee: SETTING quota of vhost is %d\n", quota);
 }
 #endif
 void add_active_vif(struct ancs_vm *vif)

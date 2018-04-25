@@ -844,6 +844,12 @@ static int vhost_net_release(struct inode *inode, struct file *f)
 	struct socket *tx_sock;
 	struct socket *rx_sock;
 
+#ifdef ANCS	
+	struct ancs_vm *vif = n->vnet;
+	list_del(&vif->active_list);
+	list_del(&vif->proc_list);
+	kfree(vif);
+#endif
 	vhost_net_stop(n, &tx_sock, &rx_sock);
 	vhost_net_flush(n);
 	vhost_dev_stop(&n->dev);
