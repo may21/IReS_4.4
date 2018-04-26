@@ -8,6 +8,7 @@
 #include<linux/sched.h>
 #include<../kernel/sched/sched.h>
 #include "common.h"
+#include <stdlib.h>
 struct proc_dir_vif{
 	char name[10];
 	int id;
@@ -52,10 +53,10 @@ static void quota_control(unsigned long data){
 		goal = temp_vif->max_credit;
 		perf = temp_vif->used_credit;
 
-		if(goal == perf)
+		if(goal == perf || perf==0)
 			goto skip;
 
-		prev_diff = temp_vif->used_credit - temp_vif->remaining_credit;
+		prev_diff = labs(temp_vif->used_credit - temp_vif->remaining_credit);
 		
 		if(prev_diff == 0)
 			diff = 1;
