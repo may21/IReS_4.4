@@ -8,7 +8,6 @@
 #include<linux/sched.h>
 #include<../kernel/sched/sched.h>
 #include "common.h"
-#include <stdlib.h>
 struct proc_dir_vif{
 	char name[10];
 	int id;
@@ -36,7 +35,7 @@ static DECLARE_WORK(ires_work, ires_work_func);
 static void quota_control(unsigned long data){
 	struct list_head *next;
 	struct ancs_vm *temp_vif, *next_vif;
-	unsigned long goal, perf, prev_dif;
+	unsigned long goal, perf, prev_diff;
 	int before, after, diff;
 	double dat;
 	int cpu = smp_processor_id();
@@ -57,24 +56,24 @@ static void quota_control(unsigned long data){
 		if(goal == perf || perf==0)
 			goto skip;
 
-		prev_diff = labs(temp_vif->used_credit - temp_vif->remaining_credit);
+		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
 		diff = goal - perf;
 		
-		dat = labs(diff/goal);
+		dat = diff/goal;
 
 		before = get_quota(temp_vif);
 
-		if(diff<0)
-			after = before - before*dat;
-		else
-			after = before + before*dat;
+		after = before + before*dat;
 
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
 
 		if(after < 0)
 			after = MIN_QUOTA;
-		
+
+		if(diff<0)
+			printk(KERN_INFO "kwlee: diff = %d, dat = %f\n", diff, dat);
+
 		set_vhost_quota(temp_vif, after);
 
 	skip:
