@@ -60,24 +60,29 @@ static void quota_control(unsigned long data){
 
 		before = get_quota(temp_vif);
 
-		dat =(int) before * ((diff + goal - 1)/goal);
-
-		after = before + dat;
-
+		if(diff<0){
+			dat =before * ((perf - goal)/goal);
+			after = before - dat;
+			}
+		else{		
+			dat =before * ((goal-perf)/goal);
+			after = before + dat;
+			}
+		
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
-
-		if(after < 0)
+		else if(after < 0)
 			after = MIN_QUOTA;
 
 		if(diff<0)
-			printk(KERN_INFO "kwlee: diff = %d, dat = %f\n", diff, dat);
+			printk(KERN_INFO "kwlee: diff = %d, dat = %d\n", diff, dat);
 
 		set_vhost_quota(temp_vif, after);
 
 	skip:
 		temp_vif->remaining_credit = temp_vif->used_credit;
 		temp_vif->used_credit = 0;
+		temp_vif->pps = 0;
 		}
 	out:
 	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));

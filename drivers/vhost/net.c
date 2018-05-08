@@ -380,6 +380,7 @@ static void handle_tx(struct vhost_net *net)
 				}
 			vnet->remaining_credit-=len;*/
 			vnet->used_credit+=len;
+			vnet->pps++;
 			}
 #endif
 		iov_iter_init(&msg.msg_iter, WRITE, vq->iov, out, len);
@@ -757,6 +758,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	vnet->max_credit = 0;
 	vnet->min_credit = 0;
 	vnet->used_credit = 0;
+	vnet->pps=0;
 	vnet->need_reschedule = false;
 	vnet->poll=n->poll;
 #ifdef CPU_CONTROL
