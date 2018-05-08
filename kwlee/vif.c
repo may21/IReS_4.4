@@ -36,8 +36,7 @@ static void quota_control(unsigned long data){
 	struct list_head *next;
 	struct ancs_vm *temp_vif, *next_vif;
 	unsigned long goal, perf, prev_diff;
-	int before, after, diff;
-	double dat;
+	int before, after, diff, dat;
 	int cpu = smp_processor_id();
 	WARN_ON(cpu != data);	
 
@@ -59,11 +58,11 @@ static void quota_control(unsigned long data){
 		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
 		diff = goal - perf;
 		
-		dat = diff/goal;
+		dat = ((diff + goal - 1)/goal)*100;
 
 		before = get_quota(temp_vif);
 
-		after = before + before*dat;
+		after = before + before*(dat/100);
 
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
