@@ -36,8 +36,9 @@ static DECLARE_WORK(ires_work, ires_work_func);
 static void quota_control(unsigned long data){
 	struct list_head *next;
 	struct ancs_vm *temp_vif, *next_vif;
-	unsigned long goal, perf, prev_diff;
+	unsigned long goal, perf, prev_dif;
 	int before, after, diff;
+	double dat;
 	int cpu = smp_processor_id();
 	WARN_ON(cpu != data);	
 
@@ -57,19 +58,17 @@ static void quota_control(unsigned long data){
 			goto skip;
 
 		prev_diff = labs(temp_vif->used_credit - temp_vif->remaining_credit);
+		diff = goal - perf;
 		
-		if(prev_diff == 0)
-			diff = 1;
-		else
-			diff = (goal-perf)/prev_diff;
+		dat = labs(diff/goal);
 
 		before = get_quota(temp_vif);
-		
-		if(diff>5)
-			diff = 5;
-		
-		after = before + 1000*diff;
-		
+
+		if(diff<0)
+			after = before - before*dat;
+		else
+			after = before + before*dat;
+
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
 
