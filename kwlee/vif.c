@@ -52,7 +52,7 @@ static void quota_control(unsigned long data){
 		goal = temp_vif->max_credit;
 		perf = temp_vif->used_credit;
 
-		if(goal == perf || perf==0)
+		if(goal == perf || perf==0 || goal==0)
 			goto skip;
 
 		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
