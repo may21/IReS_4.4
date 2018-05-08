@@ -57,12 +57,12 @@ static void quota_control(unsigned long data){
 
 		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
 		diff = goal - perf;
-		
-		dat = ((diff + goal - 1)/goal)*100;
 
 		before = get_quota(temp_vif);
 
-		after = before + before*(dat/100);
+		dat =(int) before * ((diff + goal - 1)/goal);
+
+		after = before + dat;
 
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
