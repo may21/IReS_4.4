@@ -61,11 +61,11 @@ static void quota_control(unsigned long data){
 		before = get_quota(temp_vif);
 
 		if(diff<0){
-			dat =before * ((perf - goal)/goal);
+			dat =100*((perf - goal)/goal);
 			after = before - dat;
 			}
 		else{		
-			dat =before * ((goal-perf)/goal);
+			dat =100 * ((goal-perf)/goal);
 			after = before + dat;
 			}
 		
