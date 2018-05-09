@@ -43,23 +43,25 @@ static void quota_control(unsigned long data){
 	if(list_empty(&credit_allocator->active_vif_list))
 		goto out;
 
-	diff=1;
-
 	list_for_each_entry_safe(temp_vif, next_vif, &credit_allocator->active_vif_list, active_list){
 		if(!temp_vif)
 			goto out;
 
 		goal = temp_vif->max_credit;
+#ifdef BANDWIDTH_CONTROL
 		perf = temp_vif->used_credit;
-
+#else /* PPS_CONTROL */
+		perf = temp_vif->pps;
+#endif
 		if(goal == perf || perf==0 || goal==0)
 			goto skip;
 
-		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
+//		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
 		diff = goal - perf;
 
 		before = get_quota(temp_vif);
-
+		after = before + diff;
+#if 0
 		if(diff<0){
 			dat =10000*((perf - goal)/goal);
 			after = before - dat;
@@ -68,7 +70,7 @@ static void quota_control(unsigned long data){
 			dat =10000 * ((goal-perf)/goal);
 			after = before + dat;
 			}
-		
+#endif	
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
 		else if(after < 0)
@@ -80,9 +82,13 @@ static void quota_control(unsigned long data){
 		set_vhost_quota(temp_vif, after);
 
 	skip:
-		temp_vif->remaining_credit = temp_vif->used_credit;
+#ifdef BW_CONTRL
+		temp_vif->stat.nw_usage = temp_vif->used_credit;
 		temp_vif->used_credit = 0;
+#else /* PPS_CONTROL */
+		temp_vif->stat.nw_usage = temp_vif->pps;
 		temp_vif->pps = 0;
+#endif
 		}
 	out:
 	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));

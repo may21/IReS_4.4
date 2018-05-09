@@ -19,6 +19,8 @@
 #ifndef CPU_CONTROL
 #define CPU_CONTROL
 #endif
+#undef BW_CONTRL
+#define PPS_CONTROL
 
 #define MAX_CREDIT 8000000	//kwlee
 #define MIN_CREDIT 100000
