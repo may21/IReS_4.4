@@ -32,7 +32,7 @@
 
 #define MAX_QUOTA 100000
 #define MIN_QUOTA 1000
-#define MAX_DIFF 50000
+#define MAX_DIFF 10000
 
 struct ancs_vm;
 

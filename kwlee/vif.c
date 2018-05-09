@@ -60,24 +60,20 @@ static void quota_control(unsigned long data){
 		diff = goal - perf;
 
 		before = get_quota(temp_vif);
-		after = before + diff;
-#if 0
-		if(diff<0){
-			dat =10000*((perf - goal)/goal);
-			after = before - dat;
-			}
-		else{		
-			dat =10000 * ((goal-perf)/goal);
-			after = before + dat;
-			}
-#endif	
+
+		dat = ((10000 * diff) + (goal-1))/goal;
+
+		if(dat>10000)
+			dat=MAX_DIFF;
+
+		after = before + dat;
+		
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
 		else if(after < 0)
 			after = MIN_QUOTA;
 
-		if(diff<0)
-			printk(KERN_INFO "kwlee: diff = %d, dat = %d\n", diff, dat);
+		printk(KERN_INFO "kwlee: VM%d, diff = %d, dat = %d\n", temp_vif->id, diff, dat);
 
 		set_vhost_quota(temp_vif, after);
 
