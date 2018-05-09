@@ -77,7 +77,7 @@ static void quota_control(unsigned long data){
 		else if(after < 0)
 			after = MIN_QUOTA;
 
-		printk(KERN_INFO "kwlee: VM%d, diff = %d, dat = %d\n", temp_vif->id, diff, dat);
+		printk(KERN_INFO "kwlee: VM%d, perf=%d, diff = %d, dat = %d\n", temp_vif->id, perf, diff, dat);
 
 		set_vhost_quota(temp_vif, after);
 
