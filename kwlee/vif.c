@@ -61,13 +61,17 @@ static void quota_control(unsigned long data){
 
 		before = get_quota(temp_vif);
 
-		dat = ((10000 * diff) + (goal-1))/goal;
+		if(diff>0){
+			dat = ((10000 * diff) + (goal-1))/goal;
+			if(dat>10000)
+				dat=MAX_DIFF;
+			after = before + dat;
+			}
+		else {
+			dat = ((10000*(perf-goal)) + (goal-1))/goal;
+			after = before - dat;
+			}
 
-		if(dat>10000)
-			dat=MAX_DIFF;
-
-		after = before + dat;
-		
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
 		else if(after < 0)
