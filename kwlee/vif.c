@@ -32,6 +32,10 @@ void ires_work_func(void * data)
 	printk("[WORK QUEUE] Enter workqueue function\n");  
 }
 static DECLARE_WORK(ires_work, ires_work_func);
+static void vcpu_control(struct ancs_vm *vif)
+{
+	printk("vCPU control is called\n"); 
+}
 static void quota_control(unsigned long data){
 	struct list_head *next;
 	struct ancs_vm *temp_vif, *next_vif;
@@ -66,10 +70,16 @@ static void quota_control(unsigned long data){
 			if(dat>10000)
 				dat=MAX_DIFF;
 			after = before + dat;
+
+			if(perf*2 >= goal)
+				temp_vif->vcpu_control = TRUE;
 			}
 		else {
 			dat = ((10000*(perf-goal)) + (goal-1))/goal;
 			after = before - dat;
+
+			if(goal*2 >= perf)
+				temp_vif->vcpu_control = TRUE;
 			}
 
 		if(after > MAX_QUOTA)
@@ -80,6 +90,9 @@ static void quota_control(unsigned long data){
 		printk(KERN_INFO "kwlee: VM%d, perf=%d, diff = %d, dat = %d\n", temp_vif->id, perf, diff, dat);
 
 		set_vhost_quota(temp_vif, after);
+
+		if(temp_vif->vcpu_control == TRUE)
+			vcpu_control(temp_vif);
 
 	skip:
 #ifdef BW_CONTRL

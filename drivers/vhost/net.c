@@ -766,6 +766,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	vnet->stat.nw_usage = 0;
 	vnet->stat.virq = 0;
 	vnet->stat.flag = 3;
+	vnet->vcpu_control = FALSE;
 #endif	
 #endif
 	return 0;

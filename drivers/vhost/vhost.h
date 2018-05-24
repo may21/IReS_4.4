@@ -63,6 +63,7 @@ struct ancs_vm{
 #ifdef CPU_CONTROL	
 	struct task_struct *vcpu[MAX_NUMBER_VCPU];
 	struct ancs_stat stat;
+	bool vcpu_control;
 #endif
 };
 #endif
