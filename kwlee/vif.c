@@ -127,10 +127,10 @@ static void quota_control(unsigned long data){
 }
 int get_vcpu_quota(struct ancs_vm *vif)
 {
-	struct task_struct *vcpu=vif->vcpu;
+	struct task_struct *vcpu=vif->vcpu[0];
 	int quota;
 	
-	quota=tg_get_cfs_quota(vcpu[0]->sched_task_group);
+	quota=tg_get_cfs_quota(vcpu->sched_task_group);
 	
 	//printk("kwlee: quota of vhost is %d\n", quota);
 	return quota;
@@ -148,12 +148,12 @@ int get_vhost_quota(struct ancs_vm *vif)
 }
 void set_vcpu_quota(struct ancs_vm *vif, int quota)
 {
-	struct task_group *tg;
+	struct task_struct *ts;
 	int i, err;
 
 	for(i=0; i<MAX_NUMBER_VCPU; i++){
-		tg=vif->vcpu[i]->sched_task_group;
-		err=tg_set_cfs_quota(tg, quota);
+		ts=vif->vcpu[i];
+		err=tg_set_cfs_quota(ts->sched_task_group, quota);
 		if(err)
 			printk("kwlee: vcpu quota setting is failed\n");
 		}
