@@ -135,7 +135,7 @@ int get_vcpu_quota(struct ancs_vm *vif)
 	
 	quota=tg_get_cfs_quota(vcpu->sched_task_group);
 	
-	//printk("kwlee: quota of vhost is %d\n", quota);
+	printk("kwlee: quota of vhost is %d\n", quota);
 	return quota;
 }
 
@@ -182,10 +182,8 @@ void add_active_vif(struct ancs_vm *vif)
 {
 	unsigned long flags;
 #ifdef CPU_CONTROL
-	long quota;
-	struct task_struct *test;
-	struct list_head * p;
-	int pid, i;
+	long quota, i;
+	struct task_struct *previous, next;
 #endif
 
 	if(vif==NULL){
@@ -207,21 +205,19 @@ void add_active_vif(struct ancs_vm *vif)
 	spin_unlock_irqrestore(&credit_allocator->active_vif_list_lock, flags);
 
 #ifdef CPU_CONTROL
-//	test=(struct task_struct *)vif->vhost;
-	list_for_each(p, &(vif->parent->children)){
-		test=list_entry(p, struct task_struct, children);
-		printk("kwlee: task struct %d of vhost %d\n", test->pid,vif->id);
-		}
-/*	for(i=0;i<MAX_NUMBER_VCPU;i++){
-		test=pid_task(find_get_pid(pid), PIDTYPE_PID);
-		if(!test)
+	previous = (struct task_struct *)vif->parent;
+	for(i=0;i<MAX_NUMBER_VCPU;i++){
+		next = next_thread(previous);
+		if(next == NULL){
 			printk("kwlee: vcpu task struct is NULL\n");
-		else{
-			vif->vcpu[i]=test;
-			printk("kwlee: task struct %p of pid %d\n", test, test->pid);
-			pid++;
+			break;
 			}
-	}*/
+		else{
+			vif->vcpu[i] = next;
+			printk("kwlee: task struct %p of pid %d\n", next, next->pid);
+			previous = next;
+			}
+	}
 #endif
 
 }
