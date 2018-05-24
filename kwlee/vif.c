@@ -39,7 +39,7 @@ static void vcpu_control(struct ancs_vm *vif)
 
 	goal = vif->max_credit;
 	perf = vif->used_credit;
-	before = get_quota(struct ancs_vm * vif);
+	before = get_vcpu_quota(struct ancs_vm * vif);
 
 	if(goal < perf){
 		if(before < 0)
@@ -80,7 +80,7 @@ static void quota_control(unsigned long data){
 //		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
 		diff = goal - perf;
 
-		before = get_quota(temp_vif);
+		before = get_vhost_quota(temp_vif);
 
 		if(diff>0){
 			dat = ((10000 * diff) + (goal-1))/goal;
