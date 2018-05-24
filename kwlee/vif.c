@@ -184,6 +184,7 @@ void add_active_vif(struct ancs_vm *vif)
 #ifdef CPU_CONTROL
 	long quota;
 	struct task_struct *test;
+	struct list_head * p;
 	int pid, i;
 #endif
 
@@ -206,10 +207,12 @@ void add_active_vif(struct ancs_vm *vif)
 	spin_unlock_irqrestore(&credit_allocator->active_vif_list_lock, flags);
 
 #ifdef CPU_CONTROL
-	test=(struct task_struct *)vif->vhost;
-	pid=vif->vcpu[0]->pid+VCPU_IDX;
-	printk("kwlee: task struct %d of vhost %d\n", test->pid, vif->vcpu[0]->pid);
-	for(i=0;i<MAX_NUMBER_VCPU;i++){
+//	test=(struct task_struct *)vif->vhost;
+	list_for_each(p, &(vif->parent->children)){
+		test=list_entry(p, struct task_struct, children);
+		printk("kwlee: task struct %d of vhost %d\n", test->pid,vif->id);
+		}
+/*	for(i=0;i<MAX_NUMBER_VCPU;i++){
 		test=pid_task(find_get_pid(pid), PIDTYPE_PID);
 		if(!test)
 			printk("kwlee: vcpu task struct is NULL\n");
@@ -218,7 +221,7 @@ void add_active_vif(struct ancs_vm *vif)
 			printk("kwlee: task struct %p of pid %d\n", test, test->pid);
 			pid++;
 			}
-	}
+	}*/
 #endif
 
 }
