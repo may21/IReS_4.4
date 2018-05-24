@@ -72,14 +72,14 @@ static void quota_control(unsigned long data){
 			after = before + dat;
 
 			if(perf*2 >= goal)
-				temp_vif->vcpu_control = TRUE;
+				temp_vif->vcpu_control = true;
 			}
 		else {
 			dat = ((10000*(perf-goal)) + (goal-1))/goal;
 			after = before - dat;
 
 			if(goal*2 >= perf)
-				temp_vif->vcpu_control = TRUE;
+				temp_vif->vcpu_control = true;
 			}
 
 		if(after > MAX_QUOTA)
