@@ -39,7 +39,7 @@ static void vcpu_control(struct ancs_vm *vif)
 
 	goal = vif->max_credit;
 	perf = vif->used_credit;
-	before = get_vcpu_quota(struct ancs_vm * vif);
+	before = get_vcpu_quota(vif);
 
 	if(goal < perf){
 		if(before < 0)
@@ -129,6 +129,9 @@ int get_vcpu_quota(struct ancs_vm *vif)
 {
 	struct task_struct *vcpu=vif->vcpu[0];
 	int quota;
+
+	if(vcpu==NULL)
+		return;
 	
 	quota=tg_get_cfs_quota(vcpu->sched_task_group);
 	
@@ -153,6 +156,10 @@ void set_vcpu_quota(struct ancs_vm *vif, int quota)
 
 	for(i=0; i<MAX_NUMBER_VCPU; i++){
 		ts=vif->vcpu[i];
+
+		if(ts==NULL)
+			return;
+
 		err=tg_set_cfs_quota(ts->sched_task_group, quota);
 		if(err)
 			printk("kwlee: vcpu quota setting is failed\n");
@@ -201,7 +208,7 @@ void add_active_vif(struct ancs_vm *vif)
 #ifdef CPU_CONTROL
 	test=(struct task_struct *)vif->vhost;
 	printk("kwlee: task struct %d of vhost %d\n", test->pid, vif->id);
-/*	pid=test->pid+VCPU_IDX;
+	pid=test->pid+VCPU_IDX;
 	for(i=0;i<MAX_NUMBER_VCPU;i++){
 		test=pid_task(find_get_pid(pid), PIDTYPE_PID);
 		if(!test)
@@ -211,7 +218,7 @@ void add_active_vif(struct ancs_vm *vif)
 			printk("kwlee: task struct %p of pid %d\n", test, test->pid);
 			pid++;
 			}
-	}*/
+	}
 #endif
 
 }

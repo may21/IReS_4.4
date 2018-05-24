@@ -745,6 +745,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 
 #ifdef ANCS	//kwlee
 	vnet = kmalloc(sizeof (struct ancs_vm), GFP_KERNEL | __GFP_NOWARN | __GFP_REPEAT);
+	memset(vnet, 0, sizeof(struct ancs_vm));
 	if(!vnet)
 		return -ENOMEM;
 	
