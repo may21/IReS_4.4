@@ -25,7 +25,7 @@
 #define MAX_CREDIT 8000000	//kwlee
 #define MIN_CREDIT 100000
 #define MAX_NUMBER_VCPU	4
-#define VCPU_IDX	7
+#define VCPU_IDX	8
 
 #define NW_intensive 0
 #define CPU_intensive 1

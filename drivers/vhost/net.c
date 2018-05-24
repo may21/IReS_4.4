@@ -1111,6 +1111,7 @@ static long vhost_net_set_owner(struct vhost_net *n)
 
 #ifdef ANCS
 	n->vnet->vhost=n->dev.worker;
+	n->vnet->vcpu[0]=pid_task(find_get_pid(current->pid), PIDTYPE_PID);
 #endif
 out:
 	mutex_unlock(&n->dev.mutex);
