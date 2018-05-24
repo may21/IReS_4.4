@@ -207,8 +207,8 @@ void add_active_vif(struct ancs_vm *vif)
 
 #ifdef CPU_CONTROL
 	test=(struct task_struct *)vif->vhost;
-	printk("kwlee: task struct %d of vhost %d\n", test->pid, vif->id);
 	pid=vif->vcpu[0]->pid+VCPU_IDX;
+	printk("kwlee: task struct %d of vhost %d\n", test->pid, vif->vcpu[0]->pid);
 	for(i=0;i<MAX_NUMBER_VCPU;i++){
 		test=pid_task(find_get_pid(pid), PIDTYPE_PID);
 		if(!test)
