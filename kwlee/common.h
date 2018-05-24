@@ -59,7 +59,8 @@ void remove_active_vif(struct ancs_vm *vif);
 static void credit_accounting(unsigned long data);
 static void vcpu_contrl(struct ancs_vm *vif);
 static void quota_control(unsigned long data);
-int get_quota(struct ancs_vm *vif);
+int get_vcpu_quota(struct ancs_vm *vif);
+int get_vhost_quota(struct ancs_vm *vif);
 void set_vcpu_quota(struct ancs_vm *vif, int quota);
 void set_vhost_quota(struct ancs_vm *vif, int quota);
 

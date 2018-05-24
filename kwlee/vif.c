@@ -34,7 +34,24 @@ void ires_work_func(void * data)
 static DECLARE_WORK(ires_work, ires_work_func);
 static void vcpu_control(struct ancs_vm *vif)
 {
-	printk("kwlee: vCPU control is called\n"); 
+	unsigned long goal, perf;
+	int before, after;
+
+	goal = vif->max_credit;
+	perf = vif->used_credit;
+	before = get_quota(struct ancs_vm * vif);
+
+	if(goal < perf){
+		if(before < 0)
+			after = 90000;
+		else
+			after = before - 10000;
+		}
+	else{
+		printk("kwlee: goal is much larger than perf\n");
+		}
+	set_vcpu_quota(vif, after);
+		
 }
 static void quota_control(unsigned long data){
 	struct list_head *next;
@@ -108,10 +125,20 @@ static void quota_control(unsigned long data){
 	return;
 
 }
-int get_quota(struct ancs_vm *vif)
+int get_vcpu_quota(struct ancs_vm *vif)
+{
+	struct task_struct *vcpu=vif->vcpu;
+	int quota;
+	
+	quota=tg_get_cfs_quota(vcpu[0]->sched_task_group);
+	
+	//printk("kwlee: quota of vhost is %d\n", quota);
+	return quota;
+}
+
+int get_vhost_quota(struct ancs_vm *vif)
 {
 	struct task_struct *vhost=vif->vhost;
-	struct task_struct *vcpu=vif->vcpu;
 	int quota;
 	
 	quota=tg_get_cfs_quota(vhost->sched_task_group);
