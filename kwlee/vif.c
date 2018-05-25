@@ -60,6 +60,7 @@ static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long 
 		before = get_vcpu_quota(vif);
 		after = calculate_vcpu_quota(before);
 		set_vcpu_quota(vif, after);
+		vif->vcpu_control = false;
 		return;		
 	}
 	
@@ -75,6 +76,7 @@ static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long 
 			after = calculate_vcpu_quota(before);
 			set_vcpu_quota(vif, after);
 			}
+		vif->vcpu_control = false;
 		}
 	return;
 	
@@ -195,7 +197,7 @@ void set_vcpu_quota(struct ancs_vm *vif, int quota)
 
 		err=tg_set_cfs_quota(ts->sched_task_group, quota);
 		if(err)
-			printk("kwlee: vcpu quota setting is failed -> %d \n", quota);
+			printk("kwlee: [VM%d] vcpu quota setting is failed -> %d \n", vif->id, quota);
 		}
 }
 
@@ -206,7 +208,7 @@ void set_vhost_quota(struct ancs_vm *vif, int quota)
 
 	err=tg_set_cfs_quota(tg, quota);
 	if(err)
-		printk("kwlee: vhost quota setting is failed -> %d\n", quota);
+		printk("kwlee: [VM%d] vhost quota setting is failed -> %d\n", vif->id, quota);
 	
 	//printk("kwlee: SETTING quota of vhost is %d\n", quota);
 }
