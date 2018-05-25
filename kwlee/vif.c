@@ -42,15 +42,19 @@ static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long 
 			after = 90000;
 		else
 			after = before - 10000;
+		goto out;
 		}
 	else{
 		if(list_empty(&credit_allocator->victim_vif_list))
 			printk("kwlee: goal is much larger than perf in VM%d\n", vif->id);
 		return;
 		}
-	if(after <= 0)
-		after = MIN_VCPU_QUOTA;
-	
+
+out:
+	if(after <= 0 && before > MIN_QUOTA)
+		after = before - 1000;
+	else	
+		after = MIN_QUOTA;
 	set_vcpu_quota(vif, after);
 		
 }
@@ -106,7 +110,7 @@ static void quota_control(unsigned long data){
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
 		else if(after < 0)
-			after = MIN_VHOST_QUOTA;
+			after = MIN_QUOTA;
 
 		printk(KERN_INFO "kwlee: VM%d, perf=%d, diff = %d, quota = %d\n", temp_vif->id, perf, diff, after);
 

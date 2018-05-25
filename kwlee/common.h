@@ -31,8 +31,7 @@
 #define CPU_intensive 1
 
 #define MAX_QUOTA 100000
-#define MIN_VHOST_QUOTA 1000
-#define MIN_VCPU_QUOTA 5000
+#define MIN_QUOTA 1000
 #define MAX_DIFF 10000
 
 struct ancs_vm;
@@ -47,24 +46,25 @@ struct credit_allocator{
 	spinlock_t active_vif_list_lock;
 
 	struct timer_list account_timer;
-	struct timer_list monitor_timer;
-	struct timer_list quota_timer;
-
 	unsigned int total_weight;
 	unsigned int credit_balance;
 	int num_vif;
 #ifdef CPU_CONTROL
+	struct timer_list monitor_timer;
+	struct timer_list quota_timer;
 	struct list_head victim_vif_list;
 	spinlock_t victim_vif_list_lock;
+#endif	
 };
 
 void add_active_vif(struct ancs_vm *vif);
 void remove_active_vif(struct ancs_vm *vif);
 static void credit_accounting(unsigned long data);
+#ifdef CPU_CONTROL
 static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long perf);
 static void quota_control(unsigned long data);
 int get_vcpu_quota(struct ancs_vm *vif);
 int get_vhost_quota(struct ancs_vm *vif);
 void set_vcpu_quota(struct ancs_vm *vif, int quota);
 void set_vhost_quota(struct ancs_vm *vif, int quota);
-
+#endif
