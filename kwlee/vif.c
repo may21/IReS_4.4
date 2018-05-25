@@ -32,13 +32,9 @@ void ires_work_func(void * data)
 	printk("[WORK QUEUE] Enter workqueue function\n");  
 }
 static DECLARE_WORK(ires_work, ires_work_func);
-static void vcpu_control(struct ancs_vm *vif)
+static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long perf)
 {
-	unsigned long goal, perf;
 	int before, after;
-
-	goal = vif->max_credit;
-	perf = vif->used_credit;
 	before = get_vcpu_quota(vif);
 
 	if(goal < perf){
@@ -48,9 +44,10 @@ static void vcpu_control(struct ancs_vm *vif)
 			after = before - 10000;
 		}
 	else{
-		printk("kwlee: goal is much larger than perf\n");
+		if(list_empty(&credit_allocator->victim_vif_list))
+			printk("kwlee: goal is much larger than perf in VM%d\n", vif->id);
+		return;
 		}
-	
 	if(after <= 0)
 		after = MIN_VCPU_QUOTA;
 	
@@ -79,6 +76,9 @@ static void quota_control(unsigned long data){
 		perf = temp_vif->pps;
 #endif
 		if(goal == perf || perf==0 || goal==0){
+			if(list_empty(&temp_vif->victim_list))
+				list_add_tail(&temp_vif->victim_list, &credit_allocator->victim_vif_list);
+				
 			goto skip;
 			}
 //		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
@@ -113,7 +113,7 @@ static void quota_control(unsigned long data){
 		set_vhost_quota(temp_vif, after);
 
 		if(temp_vif->vcpu_control == true)
-			vcpu_control(temp_vif);
+			vcpu_control(temp_vif, goal, perf);
 
 	skip:
 #ifdef BW_CONTRL
@@ -553,6 +553,9 @@ static int __init vif_init(void)
 	//	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
 	setup_timer(&credit_allocator->quota_timer, quota_control, cpu);
 	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
+
+	INIT_LIST_HEAD(&credit_allocator->victim_vif_list);
+	 spin_lock_init(&credit_allocator->victim_vif_list_lock);
 #endif
 	printk(KERN_INFO "kwlee: credit allocator init!!\n");	
         return 0;

@@ -53,12 +53,15 @@ struct credit_allocator{
 	unsigned int total_weight;
 	unsigned int credit_balance;
 	int num_vif;
+#ifdef CPU_CONTROL
+	struct list_head victim_vif_list;
+	spinlock_t victim_vif_list_lock;
 };
 
 void add_active_vif(struct ancs_vm *vif);
 void remove_active_vif(struct ancs_vm *vif);
 static void credit_accounting(unsigned long data);
-static void vcpu_contrl(struct ancs_vm *vif);
+static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long perf);
 static void quota_control(unsigned long data);
 int get_vcpu_quota(struct ancs_vm *vif);
 int get_vhost_quota(struct ancs_vm *vif);

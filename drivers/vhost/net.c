@@ -768,6 +768,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	vnet->stat.virq = 0;
 	vnet->stat.flag = 3;
 	vnet->vcpu_control = false;
+	INIT_LIST_HEAD(&vnet->victim_list);
 #endif	
 #endif
 	return 0;

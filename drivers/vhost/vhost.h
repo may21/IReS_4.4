@@ -64,6 +64,7 @@ struct ancs_vm{
 	struct task_struct *vcpu[MAX_NUMBER_VCPU];
 	struct ancs_stat stat;
 	bool vcpu_control;
+	struct list_head victim_list;
 #endif
 };
 #endif
