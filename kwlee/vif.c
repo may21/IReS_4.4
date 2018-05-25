@@ -50,6 +50,10 @@ static void vcpu_control(struct ancs_vm *vif)
 	else{
 		printk("kwlee: goal is much larger than perf\n");
 		}
+	
+	if(after < 0)
+		after = MIN_QUOTA;
+	
 	set_vcpu_quota(vif, after);
 		
 }
@@ -74,9 +78,9 @@ static void quota_control(unsigned long data){
 #else /* PPS_CONTROL */
 		perf = temp_vif->pps;
 #endif
-		if(goal == perf || perf==0 || goal==0)
+		if(goal == perf || perf==0 || goal==0){
 			goto skip;
-
+			}
 //		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
 		diff = goal - perf;
 
@@ -158,11 +162,11 @@ void set_vcpu_quota(struct ancs_vm *vif, int quota)
 		ts=vif->vcpu[i];
 
 		if(ts==NULL)
-			return;
+			continue;
 
 		err=tg_set_cfs_quota(ts->sched_task_group, quota);
 		if(err)
-			printk("kwlee: vcpu quota setting is failed\n");
+			printk("kwlee: vcpu quota setting is failed -> %d \n", quota);
 		}
 }
 
@@ -183,7 +187,7 @@ void add_active_vif(struct ancs_vm *vif)
 	unsigned long flags;
 #ifdef CPU_CONTROL
 	long quota, i;
-	struct task_struct *previous, next;
+	struct task_struct *previous, *next;
 #endif
 
 	if(vif==NULL){
