@@ -32,36 +32,61 @@ void ires_work_func(void * data)
 	printk("[WORK QUEUE] Enter workqueue function\n");  
 }
 static DECLARE_WORK(ires_work, ires_work_func);
-static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long perf)
+static int calculate_vcpu_quota(int before)
 {
-	int before, after;
-	before = get_vcpu_quota(vif);
-
-	if(goal < perf){
-		if(before < 0)
-			after = 90000;
-		else
-			after = before - 10000;
-		goto out;
-		}
-	else{
-		if(list_empty(&credit_allocator->victim_vif_list))
-			printk("kwlee: goal is much larger than perf in VM%d\n", vif->id);
-		return;
-		}
-
-out:
+	int after;
+	
+	if(before < 0)
+		after = 90000;
+	else
+		after = before - 10000;
+	
 	if(after <= 0 && before > MIN_QUOTA)
 		after = before - 1000;
 	else	
 		after = MIN_QUOTA;
-	set_vcpu_quota(vif, after);
-		
+
+	return after;
 }
-static void quota_control(unsigned long data){
-	struct list_head *next;
+static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long perf)
+{
 	struct ancs_vm *temp_vif, *next_vif;
-	unsigned long goal, perf, prev_diff;
+	int before, after;
+
+	if(vif==NULL)
+		goto error;
+	
+	if(goal < perf){
+		before = get_vcpu_quota(vif);
+		after = calculate_vcpu_quota(before);
+		set_vcpu_quota(vif, after);
+		return;		
+	}
+	
+	else{
+		if(list_empty(&credit_allocator->victim_vif_list))
+			goto error;
+
+		list_for_each_entry_safe(temp_vif, next_vif, &credit_allocator->victim_vif_list, victim_list){
+			if(temp_vif==NULL)
+				goto error;
+			
+			before = get_vcpu_quota(temp_vif);
+			after = calculate_vcpu_quota(before);
+			set_vcpu_quota(vif, after);
+			}
+		}
+	return;
+	
+error:
+	printk("kwlee: vcpu control failed\n");
+	return;
+			
+}
+
+static void quota_control(unsigned long data){
+	struct ancs_vm *temp_vif, *next_vif;
+	unsigned long goal, perf;
 	int before, after, diff, dat;
 	int cpu = smp_processor_id();
 	WARN_ON(cpu != data);	
@@ -85,7 +110,7 @@ static void quota_control(unsigned long data){
 				
 			goto skip;
 			}
-//		prev_diff = temp_vif->remaining_credit - temp_vif->used_credit;
+		
 		diff = goal - perf;
 
 		before = get_vhost_quota(temp_vif);
@@ -96,14 +121,14 @@ static void quota_control(unsigned long data){
 				dat=MAX_DIFF;
 			after = before + dat;
 
-			if(perf*2 < diff)
+			if(perf*2 <= diff)
 				temp_vif->vcpu_control = true;
 			}
 		else {
 			dat = ((10000*(perf-goal)) + (goal-1))/goal;
 			after = before - dat;
 
-			if(goal*2 < perf)
+			if(goal*2 <= perf)
 				temp_vif->vcpu_control = true;
 			}
 
@@ -112,7 +137,7 @@ static void quota_control(unsigned long data){
 		else if(after < 0)
 			after = MIN_QUOTA;
 
-		printk(KERN_INFO "kwlee: VM%d, perf=%d, diff = %d, quota = %d\n", temp_vif->id, perf, diff, after);
+		printk(KERN_INFO "kwlee: VM%d, perf=%d, diff = %ld, quota = %d\n", temp_vif->id, perf, diff, after);
 
 		set_vhost_quota(temp_vif, after);
 
@@ -139,7 +164,7 @@ int get_vcpu_quota(struct ancs_vm *vif)
 	int quota;
 
 	if(vcpu==NULL)
-		return;
+		return 0;
 	
 	quota=tg_get_cfs_quota(vcpu->sched_task_group);
 	

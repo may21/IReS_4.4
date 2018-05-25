@@ -67,4 +67,5 @@ int get_vcpu_quota(struct ancs_vm *vif);
 int get_vhost_quota(struct ancs_vm *vif);
 void set_vcpu_quota(struct ancs_vm *vif, int quota);
 void set_vhost_quota(struct ancs_vm *vif, int quota);
+static int calculate_vcpu_quota(int before);
 #endif
