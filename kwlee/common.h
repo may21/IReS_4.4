@@ -31,7 +31,8 @@
 #define CPU_intensive 1
 
 #define MAX_QUOTA 100000
-#define MIN_QUOTA 1000
+#define MIN_VHOST_QUOTA 1000
+#define MIN_VCPU_QUOTA 5000
 #define MAX_DIFF 10000
 
 struct ancs_vm;

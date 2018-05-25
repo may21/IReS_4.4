@@ -51,8 +51,8 @@ static void vcpu_control(struct ancs_vm *vif)
 		printk("kwlee: goal is much larger than perf\n");
 		}
 	
-	if(after < 0)
-		after = MIN_QUOTA;
+	if(after <= 0)
+		after = MIN_VCPU_QUOTA;
 	
 	set_vcpu_quota(vif, after);
 		
@@ -92,7 +92,7 @@ static void quota_control(unsigned long data){
 				dat=MAX_DIFF;
 			after = before + dat;
 
-			if(perf*2 < goal)
+			if(perf*2 < diff)
 				temp_vif->vcpu_control = true;
 			}
 		else {
@@ -106,9 +106,9 @@ static void quota_control(unsigned long data){
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
 		else if(after < 0)
-			after = MIN_QUOTA;
+			after = MIN_VHOST_QUOTA;
 
-		printk(KERN_INFO "kwlee: VM%d, perf=%d, diff = %d, dat = %d\n", temp_vif->id, perf, diff, dat);
+		printk(KERN_INFO "kwlee: VM%d, perf=%d, diff = %d, quota = %d\n", temp_vif->id, perf, diff, after);
 
 		set_vhost_quota(temp_vif, after);
 
@@ -139,7 +139,7 @@ int get_vcpu_quota(struct ancs_vm *vif)
 	
 	quota=tg_get_cfs_quota(vcpu->sched_task_group);
 	
-	printk("kwlee: quota of vhost is %d\n", quota);
+	//printk("kwlee: quota of vhost is %d\n", quota);
 	return quota;
 }
 
@@ -177,7 +177,7 @@ void set_vhost_quota(struct ancs_vm *vif, int quota)
 
 	err=tg_set_cfs_quota(tg, quota);
 	if(err)
-		printk("kwlee: vhost quota setting is failed\n");
+		printk("kwlee: vhost quota setting is failed -> %d\n", quota);
 	
 	//printk("kwlee: SETTING quota of vhost is %d\n", quota);
 }
