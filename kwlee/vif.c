@@ -107,13 +107,13 @@ static void quota_control(unsigned long data){
 
 #ifdef MIN_RESERV
 		goal = temp_vif->max_credit;
-#elif PRO_SHARE
+#elif defined(PRO_SHARE)
 		credit_allocator->total_credit += temp_vif->used_credit;
 		goal = ((total_credit * temp_vif->weight) + (total_weight-1) )/ total_weight;
 #endif
 #ifdef BW_CONTROL
 		perf = temp_vif->used_credit;
-#elif PPS_CONTROL
+#elif defined(PPS_CONTROL)
 		perf = temp_vif->pps;
 #endif
 		if(goal == perf || perf==0 || goal==0){

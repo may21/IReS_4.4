@@ -19,10 +19,10 @@
 #ifndef CPU_CONTROL
 #define CPU_CONTROL
 #endif
-#undef BW_CONTRL
+//#define BW_CONTRL
 #define PPS_CONTROL
 
-#define MIN_RESERV
+//#define MIN_RESERV
 #define PRO_SHARE
 
 #define MAX_CREDIT 8000000	//kwlee
