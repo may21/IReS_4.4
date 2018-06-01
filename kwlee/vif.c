@@ -551,6 +551,7 @@ static int __init vif_init(void)
 	 credit_allocator->total_weight = 0;
 	 credit_allocator->credit_balance = 0;
 	 credit_allocator->num_vif =0;
+	 
 	 INIT_LIST_HEAD(&credit_allocator->active_vif_list);
 	 spin_lock_init(&credit_allocator->active_vif_list_lock);
 
@@ -581,6 +582,7 @@ static int __init vif_init(void)
 		("vhost_usage",0600, proc_vif[idx].dir, &vif_opt, vif);
 		proc_vif[idx].file[8] = proc_create_data
 		("kvm_virq",0600, proc_vif[idx].dir, &vif_opt, vif);
+		
 #endif	
 		idx++;
         }
@@ -597,6 +599,7 @@ static int __init vif_init(void)
 
 	INIT_LIST_HEAD(&credit_allocator->victim_vif_list);
 	 spin_lock_init(&credit_allocator->victim_vif_list_lock);
+	 credit_allocator->total_credit = ~0UL;
 #endif
 	printk(KERN_INFO "kwlee: credit allocator init!!\n");	
         return 0;

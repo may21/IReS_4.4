@@ -19,10 +19,10 @@
 #ifndef CPU_CONTROL
 #define CPU_CONTROL
 #endif
-//#define BW_CONTRL
+#undef BW_CONTRL
 #define PPS_CONTROL
 
-//#define MIN_RESERV
+#undef MIN_RESERV
 #define PRO_SHARE
 
 #define MAX_CREDIT 8000000	//kwlee
@@ -57,9 +57,7 @@ struct credit_allocator{
 	struct timer_list quota_timer;
 	struct list_head victim_vif_list;
 	spinlock_t victim_vif_list_lock;
-#ifdef PRO_SHARE
 	unsigned long total_credit;
-#endif
 #endif	
 };
 
