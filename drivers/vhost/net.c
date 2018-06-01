@@ -755,7 +755,7 @@ static int vhost_net_open(struct inode *inode, struct file *f)
 	INIT_LIST_HEAD(&vnet->active_list);
 	vnet->id = count++;
 	vnet->remaining_credit = 0;
-	vnet->weight = 1;
+	vnet->weight = vnet->id;
 	vnet->max_credit = 0;
 	vnet->min_credit = 0;
 	vnet->used_credit = 0;

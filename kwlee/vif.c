@@ -37,9 +37,9 @@ static int calculate_vcpu_quota(int before)
 	int after;
 	
 	if(before < 0)
-		after = 90000;
+		after = 70000;
 	else
-		after = before - 10000;
+		after = before - 30000;
 	
 	if(after <= 0 && before > MIN_QUOTA)
 		after = before - 1000;
@@ -63,7 +63,7 @@ static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long 
 		vif->vcpu_control = false;
 		return;		
 	}
-	
+#if 0	
 	else{
 		if(list_empty(&credit_allocator->victim_vif_list))
 			goto error;
@@ -79,7 +79,7 @@ static void vcpu_control(struct ancs_vm *vif, unsigned long goal, unsigned long 
 		vif->vcpu_control = false;
 		}
 	return;
-	
+#endif	
 error:
 	printk("kwlee: vcpu control failed\n");
 	return;
@@ -89,9 +89,14 @@ error:
 static void quota_control(unsigned long data){
 	struct ancs_vm *temp_vif, *next_vif;
 	unsigned long goal, perf;
-	int before, after, diff, dat;
+	unsigned long total_credit;
+	int before, after, diff, dat, total_weight;
 	int cpu = smp_processor_id();
 	WARN_ON(cpu != data);	
+
+	total_credit = credit_allocator->total_credit;
+	credit_allocator->total_credit = 0;
+	total_weight = credit_allocator->total_weight;
 
 	if(list_empty(&credit_allocator->active_vif_list))
 		goto out;
@@ -100,15 +105,20 @@ static void quota_control(unsigned long data){
 		if(!temp_vif)
 			goto out;
 
+#ifdef MIN_RESERV
 		goal = temp_vif->max_credit;
-#ifdef BANDWIDTH_CONTROL
+#elif PRO_SHARE
+		credit_allocator->total_credit += temp_vif->used_credit;
+		goal = ((total_credit * temp_vif->weight) + (total_weight-1) )/ total_weight;
+#endif
+#ifdef BW_CONTROL
 		perf = temp_vif->used_credit;
-#else /* PPS_CONTROL */
+#elif PPS_CONTROL
 		perf = temp_vif->pps;
 #endif
 		if(goal == perf || perf==0 || goal==0){
-			if(list_empty(&temp_vif->victim_list))
-				list_add_tail(&temp_vif->victim_list, &credit_allocator->victim_vif_list);
+			//if(list_empty(&temp_vif->victim_list))
+			//	list_add_tail(&temp_vif->victim_list, &credit_allocator->victim_vif_list);
 				
 			goto skip;
 			}
@@ -123,8 +133,8 @@ static void quota_control(unsigned long data){
 				dat=MAX_DIFF;
 			after = before + dat;
 
-			if(perf*2 <= diff)
-				temp_vif->vcpu_control = true;
+			//if(perf*2 <= diff)
+			//	temp_vif->vcpu_control = true;
 			}
 		else {
 			dat = ((10000*(perf-goal)) + (goal-1))/goal;
