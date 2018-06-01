@@ -88,9 +88,15 @@ error:
 
 static void quota_control(unsigned long data){
 	struct ancs_vm *temp_vif, *next_vif;
-	unsigned long goal, perf;
-	unsigned long total_credit;
-	int before, after, diff, dat, total_weight;
+	unsigned long perf;
+#if defined(MIN_RESERV)
+	unsigned long goal;
+#elif defined(PRO_SHARE)
+	unsigned long long goal;
+	unsigned long long total_credit;
+	int total_weight;
+#endif
+	int before, after, diff, dat;
 	int cpu = smp_processor_id();
 	WARN_ON(cpu != data);	
 
@@ -599,7 +605,9 @@ static int __init vif_init(void)
 
 	INIT_LIST_HEAD(&credit_allocator->victim_vif_list);
 	 spin_lock_init(&credit_allocator->victim_vif_list_lock);
+#ifdef PRO_SHARE
 	 credit_allocator->total_credit = ~0UL;
+#endif
 #endif
 	printk(KERN_INFO "kwlee: credit allocator init!!\n");	
         return 0;
