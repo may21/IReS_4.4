@@ -55,7 +55,6 @@ struct ancs_vm{
 	unsigned int used_credit;
 	int id;
 	unsigned int pps;
-	unsigned int prev_pps;
 	struct list_head proc_list;	/*AHN*/
 	struct vhost_poll *poll;
 	struct task_struct *vhost;

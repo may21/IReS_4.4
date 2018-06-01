@@ -114,7 +114,7 @@ static void quota_control(unsigned long data){
 #ifdef MIN_RESERV
 		goal = temp_vif->max_credit;
 #elif defined(PRO_SHARE)
-		credit_allocator->total_credit += temp_vif->used_credit;
+		credit_allocator->total_credit += temp_vif->pps;
 		goal = ((total_credit * temp_vif->weight) + (total_weight-1) )/ total_weight;
 #endif
 #ifdef BW_CONTROL
@@ -155,7 +155,7 @@ static void quota_control(unsigned long data){
 		else if(after < 0)
 			after = MIN_QUOTA;
 
-		printk(KERN_INFO "kwlee: VM%d, perf=%d, diff = %ld, quota = %d\n", temp_vif->id, perf, diff, after);
+		printk(KERN_INFO "kwlee: VM%d, goal=%lu, perf=%lu, diff = %ld, quota = %d\n", temp_vif->id, goal, perf, after);
 
 		set_vhost_quota(temp_vif, after);
 

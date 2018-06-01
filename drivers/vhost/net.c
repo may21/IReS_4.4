@@ -378,8 +378,9 @@ static void handle_tx(struct vhost_net *net)
 					}
 				break;
 				}
-			vnet->remaining_credit-=len;*/
-			vnet->used_credit+=len;
+			vnet->remaining_credit-=len;
+			vnet->used_credit+=len;*/
+			vnet->prev_pps++;
 			vnet->pps++;
 			}
 #endif
