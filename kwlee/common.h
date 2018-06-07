@@ -57,7 +57,9 @@ struct credit_allocator{
 	struct timer_list quota_timer;
 	struct list_head victim_vif_list;
 	spinlock_t victim_vif_list_lock;
+#ifdef PRO_SHARE
 	unsigned long total_credit;
+#endif
 #endif	
 };
 

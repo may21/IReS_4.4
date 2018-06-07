@@ -159,6 +159,9 @@ static void quota_control(unsigned long data){
 
 		set_vhost_quota(temp_vif, after);
 
+		if(after == MIN_QUOTA && goal < perf)
+			temp_vif->vcpu_control = true;
+
 		if(temp_vif->vcpu_control == true)
 			vcpu_control(temp_vif, goal, perf);
 
