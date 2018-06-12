@@ -132,7 +132,7 @@ static void quota_control(unsigned long data){
 		before = get_vhost_quota(temp_vif);
 
 		if(diff>0){
-			dat = ((10000 * diff) + (goal-1))/goal;
+			dat = ((5000 * diff) + (goal-1))/goal;
 			if(dat>10000)
 				dat=MAX_DIFF;
 			after = before + dat;
@@ -141,7 +141,7 @@ static void quota_control(unsigned long data){
 			//	temp_vif->vcpu_control = true;
 			}
 		else {
-			dat = ((10000*(perf-goal)) + (goal-1))/goal;
+			dat = ((5000*(perf-goal)) + (goal-1))/goal;
 			after = before - dat;
 
 			//if(goal*2 <= perf)
@@ -150,7 +150,7 @@ static void quota_control(unsigned long data){
 
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
-		else if(after < 0 || after < MIN_QUOTA)
+		else if(after < 0)
 			after = MIN_QUOTA;
 
 		printk(KERN_INFO "kwlee: VM%d, goal=%lu, perf=%d, quota = %d\n", temp_vif->id, goal, perf, after);
