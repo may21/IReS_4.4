@@ -88,22 +88,20 @@ error:
 
 static void quota_control(unsigned long data){
 	struct ancs_vm *temp_vif, *next_vif;
-	unsigned long perf;
-#if defined(MIN_RESERV)
-	unsigned long goal;
-#elif defined(PRO_SHARE)
-	unsigned long long goal;
-	unsigned long long total_credit;
+	unsigned long perf, goal;
+#ifdef PRO_SHARE
+	unsigned long total_credit;
 	int total_weight;
 #endif
 	int before, after, diff, dat;
 	int cpu = smp_processor_id();
 	WARN_ON(cpu != data);	
 
+#ifdef PRO_SHARE
 	total_credit = credit_allocator->total_credit;
 	credit_allocator->total_credit = 0;
 	total_weight = credit_allocator->total_weight;
-
+#endif
 	if(list_empty(&credit_allocator->active_vif_list))
 		goto out;
 
@@ -159,11 +157,11 @@ static void quota_control(unsigned long data){
 
 		set_vhost_quota(temp_vif, after);
 
-		if(after == MIN_QUOTA && goal < perf)
-			temp_vif->vcpu_control = true;
+		//if(after == MIN_QUOTA && goal < perf)
+		//	temp_vif->vcpu_control = true;
 
-		if(temp_vif->vcpu_control == true)
-			vcpu_control(temp_vif, goal, perf);
+		//if(temp_vif->vcpu_control == true)
+		//	vcpu_control(temp_vif, goal, perf);
 
 	skip:
 #ifdef BW_CONTRL
