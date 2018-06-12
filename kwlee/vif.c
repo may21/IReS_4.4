@@ -98,8 +98,8 @@ static void quota_control(unsigned long data){
 	WARN_ON(cpu != data);	
 
 #ifdef PRO_SHARE
-	total_credit = credit_allocator->total_credit;
-	credit_allocator->total_credit = 0;
+	if(credit_allocator->total_credit != 0)
+		total_credit = (credit_allocator->total_credit + (5 - 1))/5;
 	total_weight = credit_allocator->total_weight;
 #endif
 	if(list_empty(&credit_allocator->active_vif_list))
@@ -112,7 +112,7 @@ static void quota_control(unsigned long data){
 #ifdef MIN_RESERV
 		goal = temp_vif->max_credit;
 #elif defined(PRO_SHARE)
-		credit_allocator->total_credit += temp_vif->pps;
+		//credit_allocator->total_credit += temp_vif->pps;
 		goal = ((total_credit * temp_vif->weight) + (total_weight-1) )/ total_weight;
 #endif
 #ifdef BW_CONTROL
@@ -169,7 +169,7 @@ static void quota_control(unsigned long data){
 		temp_vif->used_credit = 0;
 #else /* PPS_CONTROL */
 		temp_vif->stat.nw_usage = temp_vif->pps;
-		temp_vif->pps = 0;
+		//temp_vif->pps = 0;
 #endif
 		}
 	out:
@@ -307,7 +307,7 @@ static void ancs_monitoring(unsigned int data){
 	list_for_each_entry_safe(temp_vif, next_vif, &credit_allocator->active_vif_list, active_list){
 		if(!temp_vif)
 			goto out;
-		
+#if 0		
 		cpu = temp_vif->stat.cpu_usage; 
 		nw = temp_vif->used_credit;
 		
@@ -322,10 +322,13 @@ static void ancs_monitoring(unsigned int data){
 			temp_vif->stat.flag = NW_intensive;
 
 		temp_vif->used_credit = 0;
+#endif
+		result += temp_vif->pps;
+		temp_vif->pps = 0;
 		}
-
+	credit_allocator->total_credit = result;
 	out:
-	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
+	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(5000));
 	return;
 }
 #endif
@@ -599,8 +602,8 @@ static int __init vif_init(void)
 //	mod_timer(&credit_allocator->account_timer, jiffies + msecs_to_jiffies(50));
 
 #ifdef CPU_CONTROL
-	//	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
-	//	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(1000));
+	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
+	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(5000));
 	setup_timer(&credit_allocator->quota_timer, quota_control, cpu);
 	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
 
@@ -640,7 +643,7 @@ static void __exit vif_exit(void)
 		vif = list_entry(p, struct ancs_vm, proc_list);
 		remove_active_vif(vif);
 		}
-//	del_timer(&credit_allocator->monitor_timer);
+	del_timer(&credit_allocator->monitor_timer);
 //	del_timer(&credit_allocator->account_timer);
 	del_timer(&credit_allocator->quota_timer);
 
