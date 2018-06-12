@@ -150,7 +150,7 @@ static void quota_control(unsigned long data){
 
 		if(after > MAX_QUOTA)
 			after = MAX_QUOTA;
-		else if(after < 0)
+		else if(after < 0 || after < MIN_QUOTA)
 			after = MIN_QUOTA;
 
 		printk(KERN_INFO "kwlee: VM%d, goal=%lu, perf=%d, quota = %d\n", temp_vif->id, goal, perf, after);
