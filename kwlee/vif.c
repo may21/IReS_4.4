@@ -109,12 +109,18 @@ static void quota_control(unsigned long data){
 		if(!temp_vif)
 			goto out;
 
-#ifdef MIN_RESERV
+#if defined(HYBRID)
+		goal = temp_vif->max_credit + ((credit_allocator->quota_balance* temp_vif->weight) + (total_weight-1) )/ total_weight;
+		total_credit -= goal;
+		
+#elif !defined(PRO_SHARE)&&defined(MIN_RESERV)
 		goal = temp_vif->max_credit;
-#elif defined(PRO_SHARE)
+
+#elif !defined(MIN_RESERV)&&defined(PRO_SHARE)
 		//credit_allocator->total_credit += temp_vif->pps;
 		goal = ((total_credit * temp_vif->weight) + (total_weight-1) )/ total_weight;
 #endif
+
 #ifdef BW_CONTROL
 		perf = temp_vif->used_credit;
 #elif defined(PPS_CONTROL)
@@ -172,6 +178,9 @@ static void quota_control(unsigned long data){
 		//temp_vif->pps = 0;
 #endif
 		}
+#ifdef HYBRID
+	credit_allocator->quota_balance = total_credit;
+#endif
 	out:
 	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
 	return;
@@ -611,6 +620,9 @@ static int __init vif_init(void)
 	 spin_lock_init(&credit_allocator->victim_vif_list_lock);
 #ifdef PRO_SHARE
 	 credit_allocator->total_credit = ~0UL;
+#endif
+#ifdef HYBRID
+	credit_allocator->quota_balance = 0;
 #endif
 #endif
 	printk(KERN_INFO "kwlee: credit allocator init!!\n");	

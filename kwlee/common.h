@@ -22,8 +22,14 @@
 #undef BW_CONTRL
 #define PPS_CONTROL
 
-#undef MIN_RESERV
+//#undef MIN_RESERV
+//#define PRO_SHARE
+
+#define HYBRID
+#ifdef HYBRID
+#define MIN_RESERV
 #define PRO_SHARE
+#endif
 
 #define MAX_CREDIT 8000000	//kwlee
 #define MIN_CREDIT 100000
@@ -59,6 +65,9 @@ struct credit_allocator{
 	spinlock_t victim_vif_list_lock;
 #ifdef PRO_SHARE
 	unsigned long total_credit;
+#endif
+#ifdef HYBRID
+	unsigned int quota_balance;
 #endif
 #endif	
 };
