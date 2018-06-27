@@ -99,24 +99,27 @@ static void quota_control(unsigned long data){
 
 #ifdef PRO_SHARE
 	if(credit_allocator->total_credit != 0)
-		total_credit = credit_allocator->total_credit ;
+		total_credit = (credit_allocator->total_credit +(5-1))/5;
 	total_weight = credit_allocator->total_weight;
 #endif
 	if(list_empty(&credit_allocator->active_vif_list))
 		goto out;
 
-	credit_allocator->total_credit = 0;
+#ifdef HYBRID
+	if(total_credit < credit_allocator->quota_balance)
+		total_credit=0;
+	else
+		total_credit-=credit_allocator->quota_balance;
+	
+	credit_allocator->quota_balance = 0;
+#endif
 	list_for_each_entry_safe(temp_vif, next_vif, &credit_allocator->active_vif_list, active_list){
 		if(!temp_vif)
 			goto out;
 
 #if defined(HYBRID)
-		credit_allocator->total_credit += temp_vif->pps;
-		if(credit_allocator->quota_balance > 0)
-			goal = temp_vif->max_credit + (((credit_allocator->quota_balance* temp_vif->weight) + (total_weight-1) )/ total_weight);
-		else
-			goal = temp_vif->max_credit;
-		total_credit -= temp_vif->max_credit;
+		goal = temp_vif->max_credit + (((total_credit* temp_vif->weight) + (total_weight-1) )/ total_weight);
+		credit_allocator->quota_balance += temp_vif->max_credit;
 		
 #elif !defined(PRO_SHARE)&&defined(MIN_RESERV)
 		goal = temp_vif->max_credit;
@@ -183,9 +186,7 @@ static void quota_control(unsigned long data){
 		//temp_vif->pps = 0;
 #endif
 		}
-#ifdef HYBRID
-	credit_allocator->quota_balance = total_credit;
-#endif
+
 	out:
 	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
 	return;
