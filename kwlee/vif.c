@@ -110,8 +110,8 @@ static void quota_control(unsigned long data){
 			goto out;
 
 #if defined(HYBRID)
-		goal = temp_vif->max_credit + ((credit_allocator->quota_balance* temp_vif->weight) + (total_weight-1) )/ total_weight;
-		total_credit -= goal;
+		goal = temp_vif->max_credit + (((credit_allocator->quota_balance* temp_vif->weight) + (total_weight-1) )/ total_weight);
+		total_credit -= temp_vif->max_credit;
 		
 #elif !defined(PRO_SHARE)&&defined(MIN_RESERV)
 		goal = temp_vif->max_credit;
