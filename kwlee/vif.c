@@ -98,8 +98,10 @@ static void quota_control(unsigned long data){
 	WARN_ON(cpu != data);	
 
 #ifdef PRO_SHARE
-	if(credit_allocator->total_credit != 0)
-		total_credit = (credit_allocator->total_credit +(5-1))/5;
+	if(credit_allocator->total_credit != 0){
+		total_credit = credit_allocator->total_credit;
+		credit_allocator->total_credit = 0;
+		}
 	total_weight = credit_allocator->total_weight;
 #endif
 	if(list_empty(&credit_allocator->active_vif_list))
@@ -125,7 +127,7 @@ static void quota_control(unsigned long data){
 		goal = temp_vif->max_credit;
 
 #elif !defined(MIN_RESERV)&&defined(PRO_SHARE)
-		//credit_allocator->total_credit += temp_vif->pps;
+		credit_allocator->total_credit += temp_vif->pps;
 		goal = ((total_credit * temp_vif->weight) + (total_weight-1) )/ total_weight;
 #endif
 
@@ -183,7 +185,7 @@ static void quota_control(unsigned long data){
 		temp_vif->used_credit = 0;
 #else /* PPS_CONTROL */
 		temp_vif->stat.nw_usage = temp_vif->pps;
-		//temp_vif->pps = 0;
+		temp_vif->pps = 0;
 #endif
 		}
 
@@ -619,8 +621,8 @@ static int __init vif_init(void)
 //	mod_timer(&credit_allocator->account_timer, jiffies + msecs_to_jiffies(50));
 
 #ifdef CPU_CONTROL
-	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
-	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(5000));
+//	setup_timer(&credit_allocator->monitor_timer, ancs_monitoring, cpu);
+//	mod_timer(&credit_allocator->monitor_timer, jiffies + msecs_to_jiffies(5000));
 	setup_timer(&credit_allocator->quota_timer, quota_control, cpu);
 	mod_timer(&credit_allocator->quota_timer, jiffies + msecs_to_jiffies(1000));
 
