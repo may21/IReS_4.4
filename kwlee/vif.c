@@ -97,6 +97,9 @@ static void quota_control(unsigned long data){
 	int cpu = smp_processor_id();
 	WARN_ON(cpu != data);	
 
+	if(list_empty(&credit_allocator->active_vif_list))
+		goto out;
+
 #ifdef PRO_SHARE
 	if(credit_allocator->total_credit != 0){
 		total_credit = credit_allocator->total_credit;
@@ -104,8 +107,6 @@ static void quota_control(unsigned long data){
 		}
 	total_weight = credit_allocator->total_weight;
 #endif
-	if(list_empty(&credit_allocator->active_vif_list))
-		goto out;
 
 #ifdef HYBRID
 	if(total_credit < credit_allocator->quota_balance)
@@ -115,6 +116,7 @@ static void quota_control(unsigned long data){
 	
 	credit_allocator->quota_balance = 0;
 #endif
+
 	list_for_each_entry_safe(temp_vif, next_vif, &credit_allocator->active_vif_list, active_list){
 		if(!temp_vif)
 			goto out;
@@ -154,7 +156,7 @@ static void quota_control(unsigned long data){
 
 		if(diff>0){
 			dat = ((5000 * diff) + (goal-1))/goal;
-			if(dat>10000)
+			if(dat>MAX_DIFF)
 				dat=MAX_DIFF;
 			after = before + dat;
 
