@@ -121,9 +121,13 @@ static void quota_control(unsigned long data){
 
 #if defined(HYBRID)
 		credit_allocator->total_credit += temp_vif->pps;
-		goal = temp_vif->max_credit + (((total_credit* temp_vif->weight) + (total_weight-1) )/ total_weight);
 		credit_allocator->quota_balance += temp_vif->max_credit;
 		
+		if(total_credit==0)
+			goal = temp_vif->max_credit;
+		else
+			goal = temp_vif->max_credit + (((total_credit* temp_vif->weight) + (total_weight-1) )/ total_weight);
+
 #elif !defined(PRO_SHARE)&&defined(MIN_RESERV)
 		goal = temp_vif->max_credit;
 
