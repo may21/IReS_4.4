@@ -120,6 +120,7 @@ static void quota_control(unsigned long data){
 			goto out;
 
 #if defined(HYBRID)
+		credit_allocator->total_credit += temp_vif->pps;
 		goal = temp_vif->max_credit + (((total_credit* temp_vif->weight) + (total_weight-1) )/ total_weight);
 		credit_allocator->quota_balance += temp_vif->max_credit;
 		
@@ -665,7 +666,7 @@ static void __exit vif_exit(void)
 		vif = list_entry(p, struct ancs_vm, proc_list);
 		remove_active_vif(vif);
 		}
-	del_timer(&credit_allocator->monitor_timer);
+//	del_timer(&credit_allocator->monitor_timer);
 //	del_timer(&credit_allocator->account_timer);
 	del_timer(&credit_allocator->quota_timer);
 
