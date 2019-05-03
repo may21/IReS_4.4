@@ -3,6 +3,8 @@
 //kwlee
 #define ANCS
 #define CPU_CONTROL
+#define SKIP_QOS
+//#define SIMPLE_XMIT
 #include <linux/eventfd.h>
 #include <linux/vhost.h>
 #include <linux/mm.h>

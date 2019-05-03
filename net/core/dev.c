@@ -3047,6 +3047,30 @@ struct netdev_queue *netdev_pick_tx(struct net_device *dev,
 	return netdev_get_tx_queue(dev, queue_index);
 }
 
+#ifdef SIMPLE_XMIT
+static int __dev_queue_xmit_simple(struct sk_buff *skb, void *accel_priv)
+{
+	struct net_device *dev = skb->dev;
+	const struct net_device_ops *ops = dev->netdev_ops;
+
+	struct netdev_queue *txq;
+	int rc = -ENOMEM;
+
+	skb_set_queue_mapping(skb, smp_processor_id());
+	rc = ops->ndo_start_xmit(skb, dev);
+
+	if(dev_xmit_complete(rc))
+		goto out;
+
+	rc = -ENETDOWN;
+	atomic_long_inc(&dev->tx_dropped);
+	kfree_skb(skb);
+	return rc;
+	
+out:
+		return rc;
+}
+#endif
 /**
  *	__dev_queue_xmit - transmit a buffer
  *	@skb: buffer to transmit
@@ -3117,11 +3141,13 @@ static int __dev_queue_xmit(struct sk_buff *skb, void *accel_priv)
 	skb->tc_verd = SET_TC_AT(skb->tc_verd, AT_EGRESS);
 #endif
 	trace_net_dev_queue(skb);
+//kwlee
+#ifndef SKIP_QOS
 	if (q->enqueue) {
 		rc = __dev_xmit_skb(skb, q, dev, txq);
 		goto out;
 	}
-
+#endif
 	/* The device has no queue. Common case for software devices:
 	   loopback, all the sorts of tunnels...
 
@@ -3190,7 +3216,11 @@ EXPORT_SYMBOL(dev_queue_xmit);
 
 int dev_queue_xmit_accel(struct sk_buff *skb, void *accel_priv)
 {
+#ifdef SIMPLE_XMIT
+	return __dev_queue_xmit_simple(skb, NULL)
+#else	
 	return __dev_queue_xmit(skb, accel_priv);
+#endif
 }
 EXPORT_SYMBOL(dev_queue_xmit_accel);
 
