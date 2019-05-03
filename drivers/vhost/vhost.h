@@ -3,7 +3,6 @@
 //kwlee
 #define ANCS
 #define CPU_CONTROL
-#define VAPI
 #include <linux/eventfd.h>
 #include <linux/vhost.h>
 #include <linux/mm.h>

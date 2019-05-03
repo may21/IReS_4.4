@@ -304,8 +304,6 @@ static void handle_tx(struct vhost_net *net)
 	unsigned out, in;
 	int head;
 #ifdef ANCS
-	int i;
-	int budget = 64;
 	struct ancs_vm *vnet = net->vnet;
 	struct list_head *ancs_head;
 #endif	
@@ -332,12 +330,8 @@ static void handle_tx(struct vhost_net *net)
 
 	hdr_size = nvq->vhost_hlen;
 	zcopy = nvq->ubufs;
-#ifdef VAPI
-	for (i=0; i++ ; i<budget)
-#else
-	for (;;) 
-#endif	
-	{
+
+	for (;;) {
 		/* Release DMAs done buffers first */
 		if (zcopy)
 			vhost_zerocopy_signal_used(net, vq);
@@ -374,8 +368,7 @@ static void handle_tx(struct vhost_net *net)
 #ifdef ANCS
 		ancs_head=&vnet->active_list;
 		if(ancs_head!=ancs_head->prev){ 
-#ifndef CPU_CONTROL
-			if(len > vnet->remaining_credit){
+/*			if(len > vnet->remaining_credit){
 				printk("kwlee: len = %d, remaining credit = %d\n", len, vnet->remaining_credit);
 				vnet->need_reschedule=true;
 				vhost_discard_vq_desc(vq, 1);
@@ -386,8 +379,7 @@ static void handle_tx(struct vhost_net *net)
 				break;
 				}
 			vnet->remaining_credit-=len;
-			vnet->used_credit+=len;
-#endif			
+			vnet->used_credit+=len;*/
 			vnet->pps++;
 			}
 #endif
@@ -1120,6 +1112,8 @@ static long vhost_net_set_owner(struct vhost_net *n)
 
 #ifdef ANCS
 	n->vnet->vhost=n->dev.worker;
+//	n->vnet->vcpu[0]=pid_task(find_get_pid(current->pid), PIDTYPE_PID);
+//	printk("kwlee: current->pid = %d\n", current->pid);
 	n->vnet->parent = current;
 #endif
 out:
